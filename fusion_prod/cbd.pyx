@@ -20,6 +20,12 @@ class ConformalBlocksBundle(object):
     '''
 
     def __init__(self, liealg, weights, level):
+        """
+
+        :param liealg:
+        :param weights:
+        :param level:
+        """
         '''
         Constructor
         '''
