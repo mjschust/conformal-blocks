@@ -9,12 +9,9 @@ Welcome to Conformal Blocks Divisors's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-.. automodule:: fusion_prod.cbd
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    fusion_prod.rst
 
 
 Indices and tables
