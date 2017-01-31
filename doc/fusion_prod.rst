@@ -10,6 +10,7 @@ fusion_prod.cbd module
 .. automodule:: fusion_prod.cbd
     :members:
     :undoc-members:
+    :special-members: __init__
     :show-inheritance:
 
 

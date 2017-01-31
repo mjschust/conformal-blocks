@@ -1,7 +1,7 @@
+# cython: profile=True
 from __future__ import division
 from collections import defaultdict
 import math, fractions
-# cython: profile=True
 '''
 Created on Nov 10, 2016
 
@@ -10,25 +10,16 @@ Created on Nov 10, 2016
 
 
 class ConformalBlocksBundle(object):
-    '''
+    """
     A class representing a conformal blocks vector bundle.
-
-    Attributes:
-        liealg: simple lie algebra
-        weights: list of weights
-        level: positive integer
-    '''
+    """
 
     def __init__(self, liealg, weights, level):
         """
-
-        :param liealg:
-        :param weights:
-        :param level:
+        :param liealg: A SimpleLieAlgebra object.
+        :param weights: A list of lists of integers; the weights of the conformal blocks bundle.
+        :param level: A positive integer; the level of the conformal blocks bundle.
         """
-        '''
-        Constructor
-        '''
         self.liealg = liealg
         new_weights = []
         for wt in weights:
@@ -38,9 +29,12 @@ class ConformalBlocksBundle(object):
         self._rank = -1
 
     def getRank(self):
-        '''
-        Computes the rank of the conformal blocks bundle
-        '''
+        """
+        Computes the rank of the conformal blocks bundle.  The algorithm uses factorization, then
+        the fusion product to compute the 3-point ranks.
+
+        :return: An integer; the rank of the bundle.
+        """
         if self._rank < 0:
             self._rank = self._compute_CB_rank(self.weights, self.level)
 
@@ -85,6 +79,14 @@ class ConformalBlocksBundle(object):
         return ret_val
 
     def intersect_F_curve(self, partition):
+        """
+        Computes the intersection of the divisor associated to this conformal blocks bundle with
+        the given F-curve.
+
+        :param partition: A list of 4 lists of integers partitioning the set {1, ..., # points}; the
+            F-curve to be intersected.
+        :return: An integer; the intersection number.
+        """
         ret_val = 0
         wt_list1 = [self.weights[point - 1] for point in partition[0]]
         wt_list2 = [self.weights[point - 1] for point in partition[1]]
@@ -114,22 +116,28 @@ class ConformalBlocksBundle(object):
 
 
 class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
-    '''
-    A class representing a conformal blocks vector bundle.
-
-    Attributes:
-        liealg: simple lie algebra
-        weights: list of weights
-        level: positive integer
-    '''
+    """
+    A class representing a symmetric conformal blocks vector bundle.
+    """
 
     def __init__(self, liealg, wt, num_points, level):
-        '''
-        Constructor
-        '''
+        """
+        :param liealg: A SimpleLieAlgebra object.
+        :param wt: A list of integers; the weight of the conformal blocks bundle, repeated at each
+            point.
+        :param num_points: A positive integer; the number of points of the conformal blocks bundle.
+        :param level: A positive integer; the level of the conformal blocks bundle.
+        """
         ConformalBlocksBundle.__init__(self, liealg, [wt for i in range(num_points)], level)
 
     def getDivisor(self):
+        """
+        Computes the divisor associated to the conformal blocks bundle.  Implements Fahkruddin's
+        formula.
+
+        :return: A list of numbers; the divisor given in the standard basis B_1, B_2,... of
+            the symmetric nef cone.
+        """
         ret_val = []
         n = len(self.weights)
         wt = self.weights[0]
@@ -143,6 +151,13 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
         return ret_val
 
     def getNormalizedDivisorRay(self):
+        """
+        Computes the divisor associated to the conformal blocks bundle and normalizes the
+        vector by clearing denominators.
+
+        :return: A list of numbers; the divisor ray given in the standard basis B_1, B_2,... of
+            the symmetric nef cone.
+        """
         divisor = self.getDivisor()
         n_fact = math.factorial(len(self.weights))
         int_div = [long(n_fact * x) for x in divisor]
@@ -170,22 +185,16 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
 
 
 class IrrRep(object):
-    '''
+    """
     This class represents an irreducible finite dimensional representation of a simple Lie
     algebra.
-
-    Attributes:
-    liealg: object of type SimpleLieAlgebra; the simple Lie algebra acting on the representation
-    high_weight: highest weight of the representation
-    '''
+    """
 
     def __init__(self, liealg, high_weight):
-        '''
-        Constructor for the class.
-
-        Parameter:
-        high_weigtht: dominant integral weight
-        '''
+        """
+        :param liealg: A SimpleLieAlgebra object.
+        :param high_weight: A list of integers; the highest weight of the representation.
+        """
 
         # if not high_weight.isDominant(): raise ValueError("Highest weight must be dominant")
         self.liealg = liealg
@@ -194,6 +203,11 @@ class IrrRep(object):
         self._dom_char = {}
 
     def get_dimension(self):
+        """
+        Computes the dimension of the representation.  Implements Weyl's dimension formula.
+
+        :return: An integer; the dimension of the representation.
+        """
         if self.high_weight in self.liealg._rep_dim_dict: return self.liealg._rep_dim_dict[self.high_weight]
 
         lam = self.high_weight
@@ -212,14 +226,14 @@ class IrrRep(object):
         return numer / denom
 
     def get_dominant_character(self):
-        '''
-        Returns the dominant character of the representation.  Implementation is heavily influenced by
+        """
+        Computes the dominant character of the representation.  Implements Freudenthal's recursion
+        formula to compute weight multiplicities.  Implementation is heavily influenced by
         the implementation in the LiE system.
 
-        Return value:
-        A dictionary where the keys are Weight objects and the values are positive integers
-        corresponding to the multiplicity of the wt space.
-        '''
+        :return: A dictionary where the keys are tuples and the values are positive integers
+            corresponding to the multiplicity of the wt space.
+        """
         if self.high_weight in self._dom_char:
             return self._dom_char
 
@@ -252,7 +266,7 @@ class IrrRep(object):
             for wt in weight_level_dict[level]:
                 for root_lev in root_level_dict.keys():
                     for root in root_level_dict[root_lev]:
-                        new_weight = self.liealg.sub_weights(wt, root)
+                        new_weight = self.liealg._sub_weights(wt, root)
                         if new_weight.isDominant():
                             if level + root_lev in weight_level_dict:
                                 if not new_weight in weight_level_dict[level + root_lev]:
@@ -292,7 +306,7 @@ class IrrRep(object):
             b = self.liealg.killing_form(root, root)
             while True:
                 n = n + 1
-                new_weight = self.liealg.add_weights(new_weight, root)
+                new_weight = self.liealg._add_weights(new_weight, root)
                 new_dom_weight = self.liealg.reflect_to_chamber(new_weight)
                 if not new_dom_weight in self._dom_weights: break
 
@@ -300,159 +314,30 @@ class IrrRep(object):
 
         rho = self.liealg.get_rho()
         multiplicity = 2 * mult_sum / (
-        self.liealg.length_squared(self.liealg.add_weights(self.high_weight, rho)) - self.liealg.length_squared(
-            self.liealg.add_weights(wt, rho)))
+            self.liealg.length_squared(self.liealg._add_weights(self.high_weight, rho)) - self.liealg.length_squared(
+            self.liealg._add_weights(wt, rho)))
         self._dom_char[wt] = multiplicity
         return multiplicity
 
 
 class SimpleLieAlgebra(object):
-    '''
-    A template class for a simple Lie Algebra.  Unimplemented methods must be implemented by
-    subclasses of each type.  Objects of this class should be constructed by creating
-    an object of the appropriate subclass.
+    """
+    A template class for a simple Lie Algebra.  Objects of this class should be constructed by creating
+    an object of the appropriate subclass.  Unimplemented methods must be implemented by
+    subclasses of each type.
+    """
 
-    Attributes:
-        rank: a positive integer representing the Lie rank of the algebra.
-        store_fusion: if true the lie algebra will save computed fusion products
-    '''
-
-    def __init__(self, rank, store_fusion=False):
-        '''
-        Constructor
-        '''
+    def __init__(self, rank, store_fusion=True):
+        """
+        :param rank: A positive integer; the rank of the Lie algebra.
+        :param store_fusion: A boolean; if true the lie algebra will save computed fusion products;
+        """
         self.rank = rank
         self.store_fusion = store_fusion
         if store_fusion: self._fusion_dict = {}
         self._pos_roots = []
         self._rep_dim_dict = {}
 
-    def convert_funds_to_epsilons(self, coords):
-        '''
-        '''
-        raise NotImplementedError
-
-    def convert_epsilons_to_funds(self, coords):
-        '''
-        '''
-        raise NotImplementedError
-
-    def convert_funds_to_roots(self, coords):
-        '''
-        '''
-        raise NotImplementedError
-
-    def convert_roots_to_funds(self, coords):
-        '''
-        '''
-        raise NotImplementedError
-
-    def killing_form(self, wt1, wt2):
-        '''
-        '''
-        raise NotImplementedError
-
-    def reflect_to_chamber(self, wt):
-        '''
-        '''
-        raise NotImplementedError
-
-    def reflect_to_chamber_with_parity(self, wt):
-        '''
-        '''
-        raise NotImplementedError
-
-    def reflect_to_alcove_with_parity(self, wt, ell):
-        '''
-        '''
-        raise NotImplementedError
-
-    def get_positive_roots(self):
-        '''
-        Returns a list of all positive roots of the Lie algebra.
-        '''
-        raise NotImplementedError
-
-    def get_orbit_iter(self, wt):
-        '''
-        Returns an iterable object that iterates through the Weyl group orbit of the given weight.
-
-        Parameters:
-            weight: weight whose orbit we want to traverse
-
-        Returns:
-            iterator object
-        '''
-        raise NotImplementedError
-
-    def get_dual_weight(self, wt):
-        '''
-        '''
-        return NotImplementedError
-
-    def dual_coxeter(self):
-        '''
-        '''
-        return NotImplementedError
-
-    def get_level(self, wt):
-        '''
-        '''
-        return NotImplementedError
-
-    def length_squared(self, wt):
-        return self.killing_form(wt, wt)
-
-    def add_weights(self, wt1, wt2):
-        '''
-        Adds two weights and returns the sum as a new weight object
-        '''
-        ret_coords = []
-
-        for i in range(len(wt1)):
-            ret_coords.append(wt1[i] + wt2[i])
-
-        return Weight(self, ret_coords)
-
-    def sub_weights(self, wt1, wt2):
-        '''
-        Subtracts wt1 from wt2 the difference as a new weight object
-        '''
-        ret_coords = []
-
-        for i in range(len(wt1)):
-            ret_coords.append(wt1[i] - wt2[i])
-
-        return Weight(self, ret_coords)
-
-    def get_rho(self):
-        ret_coords = []
-
-        for i in range(self.rank):
-            ret_coords.append(1)
-
-        return Weight(self, ret_coords)
-
-    def casimirScalar(self, wt):
-        twoRho = Weight(self, [2 for i in range(self.rank)])
-        wt2 = self.add_weights(wt, twoRho)
-        return self.killing_form(wt, wt2)
-
-    def get_weights(self, level):
-        return [Weight(self, coords) for coords in self._get_weights(level, self.rank)]
-
-    def _get_weights(self, level, rank):
-        ret_list = []
-        if rank == 1:
-            for i in range(level + 1):
-                ret_list.append([i])
-        else:
-            r_minus_one_list = self._get_weights(level, rank - 1)
-            for coord in r_minus_one_list:
-                for i in range(level - reduce(lambda x, y: x + y, coord) + 1):
-                    ret_list.append(coord + [i])
-
-        return ret_list
 
     def tensor(self, wt1, wt2):
         """
@@ -476,15 +361,15 @@ class SimpleLieAlgebra(object):
         wt2 = rep2.high_weight
         rho = self.get_rho()
         dom_char = rep2.get_dominant_character()
-        lam_rho_sum = self.add_weights(wt, rho)
+        lam_rho_sum = self._add_weights(wt, rho)
         ret_dict = {}
 
         # Traverse entire character
         for dom_weight in dom_char.keys():
             for orbit_weight in self.get_orbit_iter(dom_weight):
-                new_sum = self.add_weights(lam_rho_sum, orbit_weight)
+                new_sum = self._add_weights(lam_rho_sum, orbit_weight)
                 new_dom_weight, parity = self.reflect_to_chamber_with_parity(new_sum)
-                new_dom_weight = self.sub_weights(new_dom_weight, rho)
+                new_dom_weight = self._sub_weights(new_dom_weight, rho)
                 if not new_dom_weight.isDominant(): continue
                 if new_dom_weight in ret_dict:
                     ret_dict[new_dom_weight] = ret_dict[new_dom_weight] + dom_char[dom_weight] * parity
@@ -519,9 +404,9 @@ class SimpleLieAlgebra(object):
         for wt in ten_decom.keys():
             if self.get_level(wt) == ell + 1: continue
 
-            wt_rho = self.add_weights(wt, rho)
+            wt_rho = self._add_weights(wt, rho)
             new_weight, parity = self.reflect_to_alcove_with_parity(wt_rho, ell + self.rank + 1)
-            lev_ell_weight = self.sub_weights(new_weight, rho)
+            lev_ell_weight = self._sub_weights(new_weight, rho)
             if not lev_ell_weight.isDominant() or self.get_level(lev_ell_weight) > ell: continue
 
             if lev_ell_weight in ret_dict:
@@ -587,6 +472,135 @@ class SimpleLieAlgebra(object):
         return int(round(ret_val))
 
 
+    def killing_form(self, wt1, wt2):
+        '''
+        '''
+        raise NotImplementedError
+
+    def length_squared(self, wt):
+        return self.killing_form(wt, wt)
+
+    def casimirScalar(self, wt):
+        twoRho = Weight(self, [2 for i in range(self.rank)])
+        wt2 = self._add_weights(wt, twoRho)
+        return self.killing_form(wt, wt2)
+
+    def dual_coxeter(self):
+        '''
+        '''
+        raise NotImplementedError
+
+    def get_level(self, wt):
+        '''
+        '''
+        raise NotImplementedError
+
+    def get_dual_weight(self, wt):
+        '''
+        '''
+        raise NotImplementedError
+
+    def get_rho(self):
+        ret_coords = []
+
+        for i in range(self.rank):
+            ret_coords.append(1)
+
+        return Weight(self, ret_coords)
+
+    def get_positive_roots(self):
+        '''
+        Returns a list of all positive roots of the Lie algebra.
+        '''
+        raise NotImplementedError
+
+    def get_weights(self, level):
+        return [Weight(self, coords) for coords in self._get_weights(level, self.rank)]
+
+    def _get_weights(self, level, rank):
+        ret_list = []
+        if rank == 1:
+            for i in range(level + 1):
+                ret_list.append([i])
+        else:
+            r_minus_one_list = self._get_weights(level, rank - 1)
+            for coord in r_minus_one_list:
+                for i in range(level - reduce(lambda x, y: x + y, coord) + 1):
+                    ret_list.append(coord + [i])
+
+        return ret_list
+
+    def reflect_to_chamber(self, wt):
+        '''
+        '''
+        raise NotImplementedError
+
+    def reflect_to_chamber_with_parity(self, wt):
+        '''
+        '''
+        raise NotImplementedError
+
+    def reflect_to_alcove_with_parity(self, wt, ell):
+        '''
+        '''
+        raise NotImplementedError
+
+    def get_orbit_iter(self, wt):
+        '''
+        Returns an iterable object that iterates through the Weyl group orbit of the given weight.
+
+        Parameters:
+            weight: weight whose orbit we want to traverse
+
+        Returns:
+            iterator object
+        '''
+        raise NotImplementedError
+
+    def _convert_funds_to_epsilons(self, coords):
+        '''
+        '''
+        raise NotImplementedError
+
+    def _convert_epsilons_to_funds(self, coords):
+        '''
+        '''
+        raise NotImplementedError
+
+    def _convert_funds_to_roots(self, coords):
+        '''
+        '''
+        raise NotImplementedError
+
+    def _convert_roots_to_funds(self, coords):
+        '''
+        '''
+        raise NotImplementedError
+
+    def _add_weights(self, wt1, wt2):
+        '''
+        Adds two weights and returns the sum as a new weight object
+        '''
+        ret_coords = []
+
+        for i in range(len(wt1)):
+            ret_coords.append(wt1[i] + wt2[i])
+
+        return Weight(self, ret_coords)
+
+    def _sub_weights(self, wt1, wt2):
+        '''
+        Subtracts wt1 from wt2 the difference as a new weight object
+        '''
+        ret_coords = []
+
+        for i in range(len(wt1)):
+            ret_coords.append(wt1[i] - wt2[i])
+
+        return Weight(self, ret_coords)
+
+
+
 class TypeALieAlgebra(SimpleLieAlgebra):
     '''
     A type A Lie algebra.
@@ -594,43 +608,6 @@ class TypeALieAlgebra(SimpleLieAlgebra):
     Inherited attributes:
         rank: a positive integer representing the Lie rank of the algebra.
     '''
-
-    def convert_funds_to_epsilons(self, coords):
-        '''
-        '''
-        # if len(coords) == 1: return list(coords)
-
-        ret_coords = [0]
-        part = 0
-        for i in reversed(range(len(coords))):
-            part += coords[i]
-            ret_coords.insert(0, part)
-
-        return ret_coords
-
-    def convert_epsilons_to_funds(self, coords):
-        '''
-        '''
-        # if len(coords) == 2: return [coords[0]- coords[1]]
-
-        ret_coords = []
-        for i in range(len(coords) - 1):
-            ret_coords.append(coords[i] - coords[i + 1])
-
-        return ret_coords
-
-    def convert_roots_to_funds(self, coords):
-        '''
-        '''
-        if len(coords) == 1: return [2 * coords[0]]
-
-        ret_coords = []
-        ret_coords.append(2 * coords[0] - coords[1])
-        for i in range(1, len(coords) - 1):
-            ret_coords.append(2 * coords[i] - coords[i + 1] - coords[i - 1])
-
-        ret_coords.append(2 * coords[-1] - coords[-2])
-        return ret_coords
 
     def killing_form(self, wt1, wt2):
         '''
@@ -646,6 +623,39 @@ class TypeALieAlgebra(SimpleLieAlgebra):
 
         return ret_val
 
+    def dual_coxeter(self):
+        return self.rank + 1
+
+    def get_level(self, wt):
+        '''
+        '''
+        return wt.epsilon_coords[0]
+
+    def get_dual_weight(self, wt):
+        return Weight(self, wt[::-1])
+
+    def get_positive_roots(self):
+        '''
+        Returns a list of all positive roots of the Lie algebra.
+        '''
+        if len(self._pos_roots) > 0: return self._pos_roots
+
+        ret_list = []
+        coords = []
+        for i in range(self.rank):
+            coords.append(0)
+
+        for i in range(len(coords)):
+            for j in range(i, len(coords)):
+                coords[j] = 1
+                ret_list.append(Root(self, list(coords)))
+
+            for j in range(i, len(coords)):
+                coords[j] = 0
+
+        self._pos_roots = ret_list
+        return ret_list
+
     def reflect_to_chamber(self, wt):
         '''
         '''
@@ -654,7 +664,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         for i in range(len(ret_coords)):
             ret_coords[i] = ret_coords[i] - ret_coords[-1]
 
-        return Weight(self, self.convert_epsilons_to_funds(ret_coords))
+        return Weight(self, self._convert_epsilons_to_funds(ret_coords))
 
     def _insertsort(self, coords):
         ret_list = list(coords)
@@ -675,7 +685,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         for i in range(len(ret_coords)):
             ret_coords[i] = ret_coords[i] - ret_coords[-1]
 
-        return Weight(self, self.convert_epsilons_to_funds(ret_coords)), parity
+        return Weight(self, self._convert_epsilons_to_funds(ret_coords)), parity
 
     def _insertsort_parity(self, coords):
         ret_list = list(coords)
@@ -701,40 +711,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             ret_coords = [x - ret_coords[-1] for x in ret_coords]
             parity = parity * -1 * fin_parity
 
-        return Weight(self, self.convert_epsilons_to_funds(ret_coords)), parity
-
-    def get_positive_roots(self):
-        '''
-        Returns a list of all positive roots of the Lie algebra.
-        '''
-        if len(self._pos_roots) > 0: return self._pos_roots
-
-        ret_list = []
-        coords = []
-        for i in range(self.rank):
-            coords.append(0)
-
-        for i in range(len(coords)):
-            for j in range(i, len(coords)):
-                coords[j] = 1
-                ret_list.append(Root(self, list(coords)))
-
-            for j in range(i, len(coords)):
-                coords[j] = 0
-
-        self._pos_roots = ret_list
-        return ret_list
-
-    def get_dual_weight(self, wt):
-        return Weight(self, wt[::-1])
-
-    def dual_coxeter(self):
-        return self.rank + 1
-
-    def get_level(self, wt):
-        '''
-        '''
-        return wt.epsilon_coords[0]
+        return Weight(self, self._convert_epsilons_to_funds(ret_coords)), parity
 
     def get_orbit_iter(self, wt):
         '''
@@ -747,6 +724,43 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             iterator object
         '''
         return self._TypeAOrbitIterator(wt)
+
+    def _convert_funds_to_epsilons(self, coords):
+        '''
+        '''
+        # if len(coords) == 1: return list(coords)
+
+        ret_coords = [0]
+        part = 0
+        for i in reversed(range(len(coords))):
+            part += coords[i]
+            ret_coords.insert(0, part)
+
+        return ret_coords
+
+    def _convert_epsilons_to_funds(self, coords):
+        '''
+        '''
+        # if len(coords) == 2: return [coords[0]- coords[1]]
+
+        ret_coords = []
+        for i in range(len(coords) - 1):
+            ret_coords.append(coords[i] - coords[i + 1])
+
+        return ret_coords
+
+    def _convert_roots_to_funds(self, coords):
+        '''
+        '''
+        if len(coords) == 1: return [2 * coords[0]]
+
+        ret_coords = []
+        ret_coords.append(2 * coords[0] - coords[1])
+        for i in range(1, len(coords) - 1):
+            ret_coords.append(2 * coords[i] - coords[i + 1] - coords[i - 1])
+
+        ret_coords.append(2 * coords[-1] - coords[-2])
+        return ret_coords
 
     class _TypeAOrbitIterator(object):
         '''
@@ -786,7 +800,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
                 i = i - 1
             if i < 0:
                 self.done = True
-                return Weight(self.liealg, self.liealg.convert_epsilons_to_funds(new_ep_coords))
+                return Weight(self.liealg, self.liealg._convert_epsilons_to_funds(new_ep_coords))
 
             self._index_list[i] = self._index_list[i] + 1
             self._oms_list[i + 1] = self._oms_list[i].remove(self._index_list[i])
@@ -795,7 +809,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
                     self._oms_list[j + 1] = self._oms_list[j].remove(0)
                 self._index_list[j] = 0
 
-            return Weight(self.liealg, self.liealg.convert_epsilons_to_funds(new_ep_coords))
+            return Weight(self.liealg, self.liealg._convert_epsilons_to_funds(new_ep_coords))
 
 
 class _OrderedMultiSet(object):
@@ -855,7 +869,7 @@ class Weight(list):
         '''
         list.__init__(self, coords)
         self.liealg = liealg
-        self.epsilon_coords = liealg.convert_funds_to_epsilons(coords)
+        self.epsilon_coords = liealg._convert_funds_to_epsilons(coords)
 
     def __hash__(self):
         '''
@@ -897,9 +911,9 @@ class Root(Weight):
             liealg: a SimpleLieAlgebra object
             coords: coordinates for the weight in terms of the basis of simple roots
         '''
-        Weight.__init__(self, liealg, liealg.convert_roots_to_funds(coords))
+        Weight.__init__(self, liealg, liealg._convert_roots_to_funds(coords))
         self.root_coords = coords
-        self.epsilon_coords = liealg.convert_funds_to_epsilons(self)
+        self.epsilon_coords = liealg._convert_funds_to_epsilons(self)
 
     def get_root_level(self):
         ret_val = 0
