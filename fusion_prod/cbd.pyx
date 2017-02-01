@@ -17,13 +17,13 @@ class ConformalBlocksBundle(object):
     def __init__(self, liealg, weights, level):
         """
         :param liealg: A SimpleLieAlgebra object.
-        :param weights: A list of lists of integers; the weights of the conformal blocks bundle.
-        :param level: A positive integer; the level of the conformal blocks bundle.
+        :param weights: A list of lists of integers: the weights of the conformal blocks bundle.
+        :param level: A positive integer: the level of the conformal blocks bundle.
         """
         self.liealg = liealg
         new_weights = []
         for wt in weights:
-            new_weights.append(Weight(liealg, wt))
+            new_weights.append(_Weight(liealg, wt))
         self.weights = new_weights
         self.level = level
         self._rank = -1
@@ -33,7 +33,7 @@ class ConformalBlocksBundle(object):
         Computes the rank of the conformal blocks bundle.  The algorithm uses factorization, then
         the fusion product to compute the 3-point ranks.
 
-        :return: An integer; the rank of the bundle.
+        :return: An integer: the rank of the bundle.
         """
         if self._rank < 0:
             self._rank = self._compute_CB_rank(self.weights, self.level)
@@ -83,9 +83,9 @@ class ConformalBlocksBundle(object):
         Computes the intersection of the divisor associated to this conformal blocks bundle with
         the given F-curve.
 
-        :param partition: A list of 4 lists of integers partitioning the set {1, ..., # points}; the
+        :param partition: A list of 4 lists of integers partitioning the set {1, ..., # points}: the
             F-curve to be intersected.
-        :return: An integer; the intersection number.
+        :return: An integer: the intersection number.
         """
         ret_val = 0
         wt_list1 = [self.weights[point - 1] for point in partition[0]]
@@ -123,10 +123,10 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
     def __init__(self, liealg, wt, num_points, level):
         """
         :param liealg: A SimpleLieAlgebra object.
-        :param wt: A list of integers; the weight of the conformal blocks bundle, repeated at each
+        :param wt: A list of integers: the weight of the conformal blocks bundle, repeated at each
             point.
-        :param num_points: A positive integer; the number of points of the conformal blocks bundle.
-        :param level: A positive integer; the level of the conformal blocks bundle.
+        :param num_points: A positive integer: the number of points of the conformal blocks bundle.
+        :param level: A positive integer: the level of the conformal blocks bundle.
         """
         ConformalBlocksBundle.__init__(self, liealg, [wt for i in range(num_points)], level)
 
@@ -135,7 +135,7 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
         Computes the divisor associated to the conformal blocks bundle.  Implements Fahkruddin's
         formula.
 
-        :return: A list of numbers; the divisor given in the standard basis B_1, B_2,... of
+        :return: A list of numbers: the divisor given in the standard basis B_1, B_2,... of
             the symmetric nef cone.
         """
         ret_val = []
@@ -155,7 +155,7 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
         Computes the divisor associated to the conformal blocks bundle and normalizes the
         vector by clearing denominators.
 
-        :return: A list of numbers; the divisor ray given in the standard basis B_1, B_2,... of
+        :return: A list of numbers: the divisor ray given in the standard basis B_1, B_2,... of
             the symmetric nef cone.
         """
         divisor = self.getDivisor()
@@ -193,12 +193,12 @@ class IrrRep(object):
     def __init__(self, liealg, high_weight):
         """
         :param liealg: A SimpleLieAlgebra object.
-        :param high_weight: A list of integers; the highest weight of the representation.
+        :param high_weight: A list of integers: the highest weight of the representation.
         """
 
         # if not high_weight.isDominant(): raise ValueError("Highest weight must be dominant")
         self.liealg = liealg
-        self.high_weight = Weight(liealg, high_weight)
+        self.high_weight = _Weight(liealg, high_weight)
         self._dom_weights = set()
         self._dom_char = {}
 
@@ -206,7 +206,7 @@ class IrrRep(object):
         """
         Computes the dimension of the representation.  Implements Weyl's dimension formula.
 
-        :return: An integer; the dimension of the representation.
+        :return: An integer: the dimension of the representation.
         """
         if self.high_weight in self.liealg._rep_dim_dict: return self.liealg._rep_dim_dict[self.high_weight]
 
@@ -329,8 +329,8 @@ class SimpleLieAlgebra(object):
 
     def __init__(self, rank, store_fusion=True):
         """
-        :param rank: A positive integer; the rank of the Lie algebra.
-        :param store_fusion: A boolean; if true the lie algebra will save computed fusion products;
+        :param rank: A positive integer: the rank of the Lie algebra.
+        :param store_fusion: A boolean: if true the lie algebra will save computed fusion products;
         """
         self.rank = rank
         self.store_fusion = store_fusion
@@ -344,11 +344,11 @@ class SimpleLieAlgebra(object):
         Computes the tensor product decomposition of the irreducible representations with highest
         weights wt1 and wt2.
 
-        :param wt1: A list or tuple of non-negative integers of length equal to self.rank;
+        :param wt1: A list or tuple of non-negative integers of length equal to self.rank:
             represents fundamental weight coordinates of the highest weight of the
             irreducible representation.
         :param wt2: Same as wt1.
-        :return: A dictionary with keys that are tuples of integers and values that are integers;
+        :return: A dictionary with keys that are tuples of integers and values that are integers:
             the keys correspond to highest weights and the values are the multiplicities of the
             corresponding representation in the tensor product of wt1 and wt2.
         """
@@ -383,12 +383,12 @@ class SimpleLieAlgebra(object):
         Computes the fusion product decomposition of the irreducible representations with highest
         weights wt1 and wt2 at level ell.
 
-        :param wt1: A list or tuple of non-negative integers of length equal to self.rank;
+        :param wt1: A list or tuple of non-negative integers of length equal to self.rank:
             represents fundamental weight coordinates of the highest weight of the
             irreducible representation.
         :param wt2: Same as wt1.
-        :param ell: A positive integer; corresponds to the level of the fusion product.
-        :return:  A dictionary with keys that are tuples of integers and values that are integers;
+        :param ell: A positive integer: corresponds to the level of the fusion product.
+        :return:  A dictionary with keys that are tuples of integers and values that are integers:
             the keys correspond to highest weights and the values are the multiplicities of the
             corresponding representation in the fusion product of wt1 and wt2.
         """
@@ -420,12 +420,15 @@ class SimpleLieAlgebra(object):
         return ret_dict
 
     def multi_fusion(self, wts, level):
-        '''
-        Computes
-        :param wts:
-        :param level:
-        :return:
-        '''
+        """
+        Computes the fusion product of a list of representations.
+
+        :param wts: A list of lists of integers: the list of weights.
+        :param level: A positive integer: corresponds to the level of the fusion product.
+        :return: A dictionary with keys that are tuples of integers and values that are integers:
+            the keys correspond to highest weights and the values are the multiplicities of the
+            corresponding representation in the fusion product of the weights.
+        """
         wt_dict = defaultdict(int)
         rem_wts = list(wts)
         cur_wt = rem_wts.pop()
@@ -443,6 +446,17 @@ class SimpleLieAlgebra(object):
         return wt_dict
 
     def degree(self, wt1, wt2, wt3, wt4, level):
+        """
+        Computes the degree of a four-point conformal blocks vector bundle.  Implements Fahkruddin's
+        formula.
+
+        :param wt1: A list of integers: a weight of the bundle.
+        :param wt2: A list of integers: a weight of the bundle.
+        :param wt3: A list of integers: a weight of the bundle.
+        :param wt4: A list of integers: a weight of the bundle.
+        :param level: A positive integer: the level of the bundle.
+        :return: A positive integer: the degree of the bundle.
+        """
         cbb = ConformalBlocksBundle(self, [wt1, wt2, wt3, wt4], level)
         ret_val = cbb.getRank() * (
         self.casimirScalar(wt1) + self.casimirScalar(wt2) + self.casimirScalar(wt3) + self.casimirScalar(wt4))
@@ -473,49 +487,92 @@ class SimpleLieAlgebra(object):
 
 
     def killing_form(self, wt1, wt2):
-        '''
-        '''
+        """
+        Computes the Killing form product of two weights.
+
+        :param wt1: A list of numbers: a weight.
+        :param wt2: A list of numbers: a weight.
+        :return: A number: the Killing form product of wt1 and wt2.
+        """
         raise NotImplementedError
 
     def length_squared(self, wt):
+        """
+        Computes the squared length of a weight using the Killing form of the algebra.
+
+        :param wt: A list of numbers: a weight.
+        :return: A positive number: the squared length of wt.
+        """
         return self.killing_form(wt, wt)
 
     def casimirScalar(self, wt):
-        twoRho = Weight(self, [2 for i in range(self.rank)])
+        """
+        Computes the Casimir scalar of a weight.
+
+        :param wt: A list of numbers: a weight.
+        :return: A number: the Casimir scalar of wt.
+        """
+        twoRho = _Weight(self, [2 for i in range(self.rank)])
         wt2 = self._add_weights(wt, twoRho)
         return self.killing_form(wt, wt2)
 
     def dual_coxeter(self):
-        '''
-        '''
+        """
+        Computes the dual coxeter number of the Lie algebra.
+
+        :return: An integer: the dual coxeter number.
+        """
         raise NotImplementedError
 
     def get_level(self, wt):
-        '''
-        '''
+        """
+        Computes the level of the weight, which is defined as the Killing product of wt and
+        the highest root of the algebra.
+
+        :param wt:  A list of numbers: a weight.
+        :return: A number: the level of the weight.
+        """
         raise NotImplementedError
 
     def get_dual_weight(self, wt):
-        '''
-        '''
+        """
+        Computes the highest weight of the contragredient representation associated to wt.
+
+        :param wt: A list of positive integers: a dominant integral weight.
+        :return: A list of positive integers: a dominant integral weight.
+        """
         raise NotImplementedError
 
     def get_rho(self):
+        """
+        Computes one-half the sum of the positive roots of the algebra, which is usually denoted
+        by rho.
+
+        :return: A list of positive integers: the weight rho.
+        """
         ret_coords = []
 
         for i in range(self.rank):
             ret_coords.append(1)
 
-        return Weight(self, ret_coords)
+        return _Weight(self, ret_coords)
 
     def get_positive_roots(self):
-        '''
-        Returns a list of all positive roots of the Lie algebra.
-        '''
+        """
+        Computes a list of all positive roots of the Lie algebra.
+
+        :return: A list of weights: the positive roots of the algebra.
+        """
         raise NotImplementedError
 
     def get_weights(self, level):
-        return [Weight(self, coords) for coords in self._get_weights(level, self.rank)]
+        """
+        Computes a list of all weights of level less than or equal to the given level.
+
+        :param level: A positive integer.
+        :return: A list of weights with level less than level.
+        """
+        return [_Weight(self, coords) for coords in self._get_weights(level, self.rank)]
 
     def _get_weights(self, level, rank):
         ret_list = []
@@ -531,30 +588,42 @@ class SimpleLieAlgebra(object):
         return ret_list
 
     def reflect_to_chamber(self, wt):
-        '''
-        '''
+        """
+        Reflects a weight into the dominant chamber of the the Lie algebra.
+
+        :param wt: A list of numbers: a weight.
+        :return: A list of non-negative numbers: a dominant weight.
+        """
         raise NotImplementedError
 
     def reflect_to_chamber_with_parity(self, wt):
-        '''
-        '''
+        """
+        Reflects a weight into the dominant chamber of the the Lie algebra, keeping track of the
+        parity of the reflections.
+
+        :param wt: A list of numbers: a weight.
+        :return: A list of non-negative numbers: a dominant weight; and a number equal to +1 or -1.
+        """
         raise NotImplementedError
 
     def reflect_to_alcove_with_parity(self, wt, ell):
-        '''
-        '''
+        """
+        Reflects a weight into the level ell fundamental chamber of the the Lie algebra, keeping track of the
+        parity of the reflections.
+
+        :param wt: A list of numbers: a weight.
+        :param ell: A positive integer: the level.
+        :return: A list of non-negative numbers: a dominant weight; and a number equal to +1 or -1.
+        """
         raise NotImplementedError
 
     def get_orbit_iter(self, wt):
-        '''
+        """
         Returns an iterable object that iterates through the Weyl group orbit of the given weight.
 
-        Parameters:
-            weight: weight whose orbit we want to traverse
-
-        Returns:
-            iterator object
-        '''
+        :param wt: A list of numbers: a weight.
+        :return: An iterator object.
+        """
         raise NotImplementedError
 
     def _convert_funds_to_epsilons(self, coords):
@@ -586,7 +655,7 @@ class SimpleLieAlgebra(object):
         for i in range(len(wt1)):
             ret_coords.append(wt1[i] + wt2[i])
 
-        return Weight(self, ret_coords)
+        return _Weight(self, ret_coords)
 
     def _sub_weights(self, wt1, wt2):
         '''
@@ -597,21 +666,16 @@ class SimpleLieAlgebra(object):
         for i in range(len(wt1)):
             ret_coords.append(wt1[i] - wt2[i])
 
-        return Weight(self, ret_coords)
+        return _Weight(self, ret_coords)
 
 
 
 class TypeALieAlgebra(SimpleLieAlgebra):
-    '''
+    """
     A type A Lie algebra.
-
-    Inherited attributes:
-        rank: a positive integer representing the Lie rank of the algebra.
-    '''
+    """
 
     def killing_form(self, wt1, wt2):
-        '''
-        '''
         ret_val = 0
 
         for i in range(self.rank + 1):
@@ -627,17 +691,12 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return self.rank + 1
 
     def get_level(self, wt):
-        '''
-        '''
         return wt.epsilon_coords[0]
 
     def get_dual_weight(self, wt):
-        return Weight(self, wt[::-1])
+        return _Weight(self, wt[::-1])
 
     def get_positive_roots(self):
-        '''
-        Returns a list of all positive roots of the Lie algebra.
-        '''
         if len(self._pos_roots) > 0: return self._pos_roots
 
         ret_list = []
@@ -648,7 +707,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         for i in range(len(coords)):
             for j in range(i, len(coords)):
                 coords[j] = 1
-                ret_list.append(Root(self, list(coords)))
+                ret_list.append(_Root(self, list(coords)))
 
             for j in range(i, len(coords)):
                 coords[j] = 0
@@ -657,14 +716,12 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return ret_list
 
     def reflect_to_chamber(self, wt):
-        '''
-        '''
         ret_coords = self._insertsort(wt.epsilon_coords)
 
         for i in range(len(ret_coords)):
             ret_coords[i] = ret_coords[i] - ret_coords[-1]
 
-        return Weight(self, self._convert_epsilons_to_funds(ret_coords))
+        return _Weight(self, self._convert_epsilons_to_funds(ret_coords))
 
     def _insertsort(self, coords):
         ret_list = list(coords)
@@ -678,14 +735,12 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return ret_list
 
     def reflect_to_chamber_with_parity(self, wt):
-        '''
-        '''
         ret_coords, parity = self._insertsort_parity(wt.epsilon_coords)
 
         for i in range(len(ret_coords)):
             ret_coords[i] = ret_coords[i] - ret_coords[-1]
 
-        return Weight(self, self._convert_epsilons_to_funds(ret_coords)), parity
+        return _Weight(self, self._convert_epsilons_to_funds(ret_coords)), parity
 
     def _insertsort_parity(self, coords):
         ret_list = list(coords)
@@ -711,24 +766,12 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             ret_coords = [x - ret_coords[-1] for x in ret_coords]
             parity = parity * -1 * fin_parity
 
-        return Weight(self, self._convert_epsilons_to_funds(ret_coords)), parity
+        return _Weight(self, self._convert_epsilons_to_funds(ret_coords)), parity
 
     def get_orbit_iter(self, wt):
-        '''
-        Returns an iterable object that iterates through the Weyl group orbit of the given weight.
-
-        Parameters:
-            weight: weight whose orbit we want to traverse
-
-        Returns:
-            iterator object
-        '''
         return self._TypeAOrbitIterator(wt)
 
     def _convert_funds_to_epsilons(self, coords):
-        '''
-        '''
-        # if len(coords) == 1: return list(coords)
 
         ret_coords = [0]
         part = 0
@@ -739,9 +782,6 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return ret_coords
 
     def _convert_epsilons_to_funds(self, coords):
-        '''
-        '''
-        # if len(coords) == 2: return [coords[0]- coords[1]]
 
         ret_coords = []
         for i in range(len(coords) - 1):
@@ -750,8 +790,6 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return ret_coords
 
     def _convert_roots_to_funds(self, coords):
-        '''
-        '''
         if len(coords) == 1: return [2 * coords[0]]
 
         ret_coords = []
@@ -800,7 +838,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
                 i = i - 1
             if i < 0:
                 self.done = True
-                return Weight(self.liealg, self.liealg._convert_epsilons_to_funds(new_ep_coords))
+                return _Weight(self.liealg, self.liealg._convert_epsilons_to_funds(new_ep_coords))
 
             self._index_list[i] = self._index_list[i] + 1
             self._oms_list[i + 1] = self._oms_list[i].remove(self._index_list[i])
@@ -809,7 +847,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
                     self._oms_list[j + 1] = self._oms_list[j].remove(0)
                 self._index_list[j] = 0
 
-            return Weight(self.liealg, self.liealg._convert_epsilons_to_funds(new_ep_coords))
+            return _Weight(self.liealg, self.liealg._convert_epsilons_to_funds(new_ep_coords))
 
 
 class _OrderedMultiSet(object):
@@ -846,27 +884,16 @@ class _OrderedMultiSet(object):
         return _OrderedMultiSet(ret_list)
 
 
-class Weight(list):
-    '''
-    This class represents a weight of a given simple Lie algebra.  The class contains methods that
-    are type-independent.
-
-    Attributes:
-        liealg: a SimpleLieAlgebra object, the algebra associated to the weight
-        epsilon_coords: coordinates of the weight in terms of epsilon coordinates
-
-    Methods:
-
-    '''
+class _Weight(list):
+    """
+    This class represents a weight of a given simple Lie algebra.
+    """
 
     def __init__(self, liealg, coords):
-        '''
-        Constructor for this class.
-
-        Parameters:
-            liealg: a SimpleLieAlgebra object
-            coords: coordinates for the weight in terms of the basis of fundamental weights
-        '''
+        """
+        :param liealg: A SimpleLieAlgebra object.
+        :param coords: A list of numbers: coordinates for the weight in terms of the basis of fundamental weights
+        """
         list.__init__(self, coords)
         self.liealg = liealg
         self.epsilon_coords = liealg._convert_funds_to_epsilons(coords)
@@ -879,10 +906,11 @@ class Weight(list):
         return hash(tuple(self))
 
     def isDominant(self):
-        '''
-        Checks if the weight is dominant
-        '''
+        """
+        Checks if the weight is dominant.
 
+        :return: A boolean.
+        """
         for coord in self:
             if coord < 0:
                 return False
@@ -890,28 +918,17 @@ class Weight(list):
         return True
 
 
-class Root(Weight):
-    '''
+class _Root(_Weight):
+    """
     This class represents an element of the root lattice of the given simple Lie algebra.
-
-    Attributes:
-        root_coords: coordinates in terms of the basis of simple roots of the Lie algebra
-
-    Inherited Attributes:
-        liealg: a SimpleLieAlgebra object, the algebra associated to the weight
-        fund_coords: coordinates of the weight in terms of the basis of fundamental weights
-        epsilon_coords: coordinates of the weight in terms of epsilon coordinates
-    '''
+    """
 
     def __init__(self, liealg, coords):
-        '''
-        Constructor for this class.
-
-        Parameters:
-            liealg: a SimpleLieAlgebra object
-            coords: coordinates for the weight in terms of the basis of simple roots
-        '''
-        Weight.__init__(self, liealg, liealg._convert_roots_to_funds(coords))
+        """
+        :param liealg: A SimpleLieAlgebra object.
+        :param coords: A list of integers: coordinates for the weight in terms of the basis of simple roots.
+        """
+        _Weight.__init__(self, liealg, liealg._convert_roots_to_funds(coords))
         self.root_coords = coords
         self.epsilon_coords = liealg._convert_funds_to_epsilons(self)
 
