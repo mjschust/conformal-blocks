@@ -85,7 +85,7 @@ For example:
 sage: V = cbd.SymmetricConformalBlocksBundle(liealg, [1,2,1], 9, 4)
 sage: V.getRank()
 41412
-sage: V.getNormalizedDivisorRay()
+sage: V.get_norm_sym_divisor_ray()
 [151081L, 189833L, 229020L]
 
 (Ignore the L's)
