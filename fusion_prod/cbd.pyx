@@ -1,7 +1,7 @@
 # cython: profile=True
 from __future__ import division
 from collections import defaultdict
-import math, fractions
+import math, fractions, itertools
 '''
 Created on Nov 10, 2016
 
@@ -78,6 +78,63 @@ class ConformalBlocksBundle(object):
 
         return ret_val
 
+    def get_symmetrized_divisor(self):
+        """
+
+        :return:
+        """
+
+        ret_val = []
+        n = len(self.weights)
+        weighted_rank = 0
+        for wt in self.weights:
+            weighted_rank += self.liealg.casimirScalar(wt)
+        weighted_rank = self.getRank() * weighted_rank / (n * (n - 1))
+
+        point_indices = [i for i in range(0, n)]
+        for i in range(2, n // 2 + 1):
+            coord = i * (n - i) * weighted_rank
+            sum = 0
+            for subset in itertools.combinations(point_indices, i):
+                #Could be more efficient here
+                wt_list1 = []
+                wt_list2 = []
+                for j in range(0,n):
+                    if j in subset:
+                        wt_list1.append(self.weights[j])
+                    else:
+                        wt_list2.append(self.weights[j])
+
+                prod = self.liealg.multi_fusion(wt_list1, self.level)
+                for mu_star in prod.keys():
+                    mu = self.liealg.get_dual_weight(mu_star)
+                    V1 = ConformalBlocksBundle(self.liealg, wt_list1 + [mu], self.level)
+                    V2 = ConformalBlocksBundle(self.liealg, wt_list2 + [mu_star], self.level)
+                    sum += self.liealg.casimirScalar(mu) * V1.getRank() * V2.getRank()
+
+            sum = sum*math.factorial(i)*math.factorial(n-i)/math.factorial(n)
+            coord = (coord - sum) / (2 * (self.level + self.liealg.dual_coxeter()))
+            ret_val.append(coord)
+
+        return ret_val
+
+    def get_norm_sym_divisor_ray(self):
+        """
+        Computes the symmetrized divisor associated to the conformal blocks bundle and normalizes the
+        vector by clearing denominators.
+
+        :return: A list of numbers: the divisor ray given in the standard basis D_1, D_2,... of
+            the symmetric nef cone.
+        """
+        divisor = self.get_symmetrized_divisor()
+        n_fact = math.factorial(len(self.weights))
+        int_div = [long(round(n_fact * x)) for x in divisor]
+        div_gcd = reduce(lambda x, y: fractions.gcd(x, y), int_div)
+        if div_gcd > 0:
+            return [x // div_gcd for x in int_div]
+        else:
+            return [x for x in int_div]
+
     def intersect_F_curve(self, partition):
         """
         Computes the intersection of the divisor associated to this conformal blocks bundle with
@@ -130,13 +187,10 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
         """
         ConformalBlocksBundle.__init__(self, liealg, [wt for i in range(num_points)], level)
 
-    def getDivisor(self):
+    def get_symmetrized_divisor(self):
         """
-        Computes the divisor associated to the conformal blocks bundle.  Implements Fahkruddin's
-        formula.
 
-        :return: A list of numbers: the divisor given in the standard basis B_1, B_2,... of
-            the symmetric nef cone.
+        :return:
         """
         ret_val = []
         n = len(self.weights)
@@ -149,23 +203,6 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
             ret_val.append(coord)
 
         return ret_val
-
-    def getNormalizedDivisorRay(self):
-        """
-        Computes the divisor associated to the conformal blocks bundle and normalizes the
-        vector by clearing denominators.
-
-        :return: A list of numbers: the divisor ray given in the standard basis B_1, B_2,... of
-            the symmetric nef cone.
-        """
-        divisor = self.getDivisor()
-        n_fact = math.factorial(len(self.weights))
-        int_div = [long(n_fact * x) for x in divisor]
-        div_gcd = reduce(lambda x, y: fractions.gcd(x, y), int_div)
-        if div_gcd > 0:
-            return [x // div_gcd for x in int_div]
-        else:
-            return [x for x in int_div]
 
     def _weightedFactor(self, wt, wt2, mult, wts_rem, ic, ret_val, rank_dict):
         prod = self.liealg.fusion(wt, wt2, self.level)
@@ -182,6 +219,7 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
 
                 ret_val[0] += self.liealg.casimirScalar(self.liealg.get_dual_weight(wt3)) * mult * prod[wt3] * \
                               rank_dict[wt3]
+
 
 
 class IrrRep(object):
@@ -447,7 +485,7 @@ class SimpleLieAlgebra(object):
 
     def degree(self, wt1, wt2, wt3, wt4, level):
         """
-        Computes the degree of a four-point conformal blocks vector bundle.  Implements Fahkruddin's
+        Computes the degree of a four-point conformal blocks vector bundle.  Implements Fakhruddin's
         formula.
 
         :param wt1: A list of integers: a weight of the bundle.

@@ -26,31 +26,86 @@ class Test(unittest.TestCase):
         cbb = cbd.ConformalBlocksBundle(liealg, [wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1], 2)
         #print(cbb.getRank())
 
-    def testConfBlocksDivisors(self):
+    def testSymmetricDivisors(self):
         liealg = cbd.TypeALieAlgebra(1)
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 4, 1)
         self.assertEqual(1, cbb.getRank(), "Rank incorrect")
-        self.assertEqual(1, cbb.getNormalizedDivisorRay()[0], "Divisor incorrect")
+        self.assertEqual(1, cbb.get_norm_sym_divisor_ray()[0], "Divisor incorrect")
         
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 6, 1)
         self.assertEqual(1, cbb.getRank(), "Rank incorrect")
-        ray = cbb.getNormalizedDivisorRay()
+        ray = cbb.get_norm_sym_divisor_ray()
         self.assertEqual(2, ray[0], "Divisor incorrect")
         self.assertEqual(1, ray[1], "Divisor incorrect")
 
         
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 8, 1)
         self.assertEqual(1, cbb.getRank(), "Rank incorrect")
-        ray = cbb.getNormalizedDivisorRay()
+        ray = cbb.get_norm_sym_divisor_ray()
         self.assertEqual(3, ray[0], "Divisor incorrect")
         self.assertEqual(2, ray[1], "Divisor incorrect")
         self.assertEqual(4, ray[2], "Divisor incorrect")
         
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 10, 1)
         self.assertEqual(1, cbb.getRank(), "Rank incorrect")
-        ray = cbb.getNormalizedDivisorRay()
-        #print(90*40320*cbb.getDivisor()[0],90*40320*cbb.getDivisor()[1],90*40320*cbb.getDivisor()[2],90*40320*cbb.getDivisor()[3])
-        #print(cbb.getNormalizedDivisorRay())
+        ray = cbb.get_norm_sym_divisor_ray()
+
+    def testConformalBlocksDivisors(self):
+        liealg = cbd.TypeALieAlgebra(1)
+        cbb = cbd.ConformalBlocksBundle(liealg, [[1], [1], [1], [1]], 1)
+        self.assertEqual(1, cbb.getRank(), "Rank incorrect")
+        self.assertEqual(1, cbb.get_norm_sym_divisor_ray()[0], "Divisor incorrect")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [[1], [1], [1], [1], [1], [1]], 1)
+        self.assertEqual(1, cbb.getRank(), "Rank incorrect")
+        ray = cbb.get_norm_sym_divisor_ray()
+        self.assertEqual(2, ray[0], "Divisor incorrect")
+        self.assertEqual(1, ray[1], "Divisor incorrect")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [[1], [1], [1], [1], [1], [1], [1], [1]], 1)
+        self.assertEqual(1, cbb.getRank(), "Rank incorrect")
+        ray = cbb.get_norm_sym_divisor_ray()
+        self.assertEqual(3, ray[0], "Divisor incorrect")
+        self.assertEqual(2, ray[1], "Divisor incorrect")
+        self.assertEqual(4, ray[2], "Divisor incorrect")
+
+        liealg = cbd.TypeALieAlgebra(5)
+        cbb = cbd.ConformalBlocksBundle(liealg, [[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0]], 1)
+        self.assertEqual(1, cbb.getRank(), "Rank incorrect")
+        ray = cbb.get_norm_sym_divisor_ray()
+        self.assertEqual(1, ray[0], "Divisor incorrect")
+        self.assertEqual(3, ray[1], "Divisor incorrect")
+
+        liealg = cbd.TypeALieAlgebra(6)
+        cbb = cbd.ConformalBlocksBundle(liealg, [[0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 1], [0, 0, 1, 0, 0, 0], [0, 0, 1, 0, 0, 0],
+                                                 [0, 1, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0]], 1)
+        self.assertEqual(1, cbb.getRank(), "Rank incorrect")
+        ray = cbb.get_norm_sym_divisor_ray()
+        self.assertEqual(4, ray[0], "Divisor incorrect")
+        self.assertEqual(5, ray[1], "Divisor incorrect")
+
+        cbb = cbd.ConformalBlocksBundle(liealg,
+                                        [[0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 1], [0, 0, 1, 0, 0, 0], [0, 0, 1, 0, 0, 0],
+                                         [0, 1, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0]], 2)
+        self.assertEqual(7, cbb.getRank(), "Rank incorrect")
+        ray = cbb.get_norm_sym_divisor_ray()
+        self.assertEqual(1, ray[0], "Divisor incorrect")
+        self.assertEqual(3, ray[1], "Divisor incorrect")
+
+        cbb = cbd.ConformalBlocksBundle(liealg,
+                                        [[0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 1], [0, 0, 1, 0, 0, 0], [0, 0, 1, 0, 0, 0],
+                                         [0, 1, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0]], 3)
+        self.assertEqual(8, cbb.getRank(), "Rank incorrect")
+        ray = cbb.get_norm_sym_divisor_ray()
+        self.assertEqual(0, ray[0], "Divisor incorrect")
+        self.assertEqual(0, ray[1], "Divisor incorrect")
+
+        liealg = cbd.TypeALieAlgebra(3)
+        cbb = cbd.ConformalBlocksBundle(liealg, [[0, 1, 4], [0, 1, 4], [1, 0, 1], [1, 0, 1], [1, 0, 1], [1, 0, 1]], 5)
+        self.assertEqual(10, cbb.getRank(), "Rank incorrect")
+        ray = cbb.get_norm_sym_divisor_ray()
+        self.assertEqual(8, ray[0], "Divisor incorrect")
+        self.assertEqual(9, ray[1], "Divisor incorrect")
 
     def testFCurve(self):
         liealg = cbd.TypeALieAlgebra(4)
