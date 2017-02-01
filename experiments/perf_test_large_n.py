@@ -4,6 +4,8 @@ import cProfile
 
 #Tests the performance of rank and divisor calculations for large (>6) number of points
 #and small weights.
+#Original time: 63 seconds
+#After flattening IrrRep: 53 seconds
 def experiment():
     rank = 4
     level = 4

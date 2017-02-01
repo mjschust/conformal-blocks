@@ -42,12 +42,10 @@ class ConformalBlocksBundle(object):
 
     def _compute_CB_rank(self, weights, level):
         # Find weights with largest and smallest corresponding rep's
-        rep = IrrRep(self.liealg, weights[0])
-        min_dim = max_dim = rep.get_dimension()
+        min_dim = max_dim = self.liealg.get_rep_dim(weights[0])
         min_index = max_index = 0
         for i in range(len(weights)):
-            rep = IrrRep(self.liealg, weights[i])
-            dim = rep.get_dimension()
+            dim = self.liealg.get_rep_dim(weights[i])
             if dim < min_dim:
                 min_dim = dim
                 min_index = i
@@ -381,6 +379,33 @@ class SimpleLieAlgebra(object):
         self._pos_roots = []
         self._rep_dim_dict = {}
 
+    def get_rep_dim(self, high_weight):
+        """
+        Computes the dimension of the representation with given highest weight.
+        Implements Weyl's dimension formula.
+
+        :param high_weight: A list or tuple of non-negative integers of length equal to self.rank:
+            represents fundamental weight coordinates of the highest weight of the
+            irreducible representation.
+        :return: An integer: the dimension of the representation.
+        """
+        high_weight = _Weight(self, high_weight)
+        if high_weight in self._rep_dim_dict: return self._rep_dim_dict[high_weight]
+
+        lam = high_weight
+        rho = self.get_rho()
+        pos_roots = self.get_positive_roots()
+
+        numer = 1
+        denom = 1
+        for root in pos_roots:
+            a = self.killing_form(lam, root)
+            b = self.killing_form(rho, root)
+            numer = numer * (a + b)
+            denom = denom * b
+
+        self._rep_dim_dict[high_weight] = numer / denom
+        return numer / denom
 
     def tensor(self, wt1, wt2):
         """
@@ -398,7 +423,7 @@ class SimpleLieAlgebra(object):
 
         # Want wt to have larger dimension
         rep1, rep2 = IrrRep(self, wt1), IrrRep(self, wt2)
-        if rep1.get_dimension() < rep2.get_dimension():
+        if self.get_rep_dim(wt1) < self.get_rep_dim(wt2):
             rep1, rep2 = rep2, rep1
         wt = rep1.high_weight
         wt2 = rep2.high_weight
@@ -436,9 +461,11 @@ class SimpleLieAlgebra(object):
             corresponding representation in the fusion product of wt1 and wt2.
         """
 
+        #rep1, rep2 = IrrRep(self, wt1), IrrRep(self, wt2)
+        wt1, wt2 = _Weight(self, wt1), _Weight(self, wt2)
+        if self.store_fusion and (wt1, wt2, ell) in self._fusion_dict:
+            return self._fusion_dict[(wt1, wt2, ell)]
         rep1, rep2 = IrrRep(self, wt1), IrrRep(self, wt2)
-        if self.store_fusion and (rep1.high_weight, rep2.high_weight, ell) in self._fusion_dict:
-            return self._fusion_dict[(rep1.high_weight, rep2.high_weight, ell)]
 
         ten_decom = self.tensor(wt1, wt2)
         ret_dict = {}
