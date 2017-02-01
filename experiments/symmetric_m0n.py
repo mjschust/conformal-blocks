@@ -24,7 +24,7 @@ def vec_cos(v1,v2):
 #cosine of the angle between them.
 def experiment():
     rank = 4
-    level = 3
+    level = 4
     num_points = 9
     goal = [1, 1, 2]
 
@@ -33,7 +33,7 @@ def experiment():
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, num_points, level)
         if cbb.getRank() == 0: continue
-        divisor = cbb.getDivisor()   
+        divisor = cbb.get_symmetrized_divisor()
         print(wt, cbb.getRank(), divisor, vec_cos(divisor, goal))
 
 if __name__ == '__main__':

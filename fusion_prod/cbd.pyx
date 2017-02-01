@@ -249,22 +249,8 @@ class IrrRep(object):
 
         :return: An integer: the dimension of the representation.
         """
-        if self.high_weight in self.liealg._rep_dim_dict: return self.liealg._rep_dim_dict[self.high_weight]
+        return self.liealg.get_rep_dim(self.high_weight)
 
-        lam = self.high_weight
-        rho = self.liealg.get_rho()
-        pos_roots = self.liealg.get_positive_roots()
-
-        numer = 1
-        denom = 1
-        for root in pos_roots:
-            a = self.liealg.killing_form(lam, root)
-            b = self.liealg.killing_form(rho, root)
-            numer = numer * (a + b)
-            denom = denom * b
-
-        self.liealg._rep_dim_dict[self.high_weight] = numer / denom
-        return numer / denom
 
     def get_dominant_character(self):
         """
@@ -275,8 +261,8 @@ class IrrRep(object):
         :return: A dictionary where the keys are tuples and the values are positive integers
             corresponding to the multiplicity of the wt space.
         """
-        if self.high_weight in self._dom_char:
-            return self._dom_char
+        #if self.high_weight in self._dom_char:
+        #    return self._dom_char
 
         pos_roots = self.liealg.get_positive_roots()
         root_level_dict = {}
@@ -378,18 +364,19 @@ class SimpleLieAlgebra(object):
         if store_fusion: self._fusion_dict = {}
         self._pos_roots = []
         self._rep_dim_dict = {}
+        self._fte_dict = {}
 
     def get_rep_dim(self, high_weight):
         """
         Computes the dimension of the representation with given highest weight.
-        Implements Weyl's dimension formula.
+        Implements Weyl's dimension formula.  !!!Currently expects a tuple!!!
 
         :param high_weight: A list or tuple of non-negative integers of length equal to self.rank:
             represents fundamental weight coordinates of the highest weight of the
             irreducible representation.
         :return: An integer: the dimension of the representation.
         """
-        high_weight = _Weight(self, high_weight)
+        #high_weight = _Weight(self, high_weight)
         if high_weight in self._rep_dim_dict: return self._rep_dim_dict[high_weight]
 
         lam = high_weight
@@ -423,7 +410,7 @@ class SimpleLieAlgebra(object):
 
         # Want wt to have larger dimension
         rep1, rep2 = IrrRep(self, wt1), IrrRep(self, wt2)
-        if self.get_rep_dim(wt1) < self.get_rep_dim(wt2):
+        if self.get_rep_dim(rep1.high_weight) < self.get_rep_dim(rep2.high_weight):
             rep1, rep2 = rep2, rep1
         wt = rep1.high_weight
         wt2 = rep2.high_weight
@@ -842,6 +829,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return self._TypeAOrbitIterator(wt)
 
     def _convert_funds_to_epsilons(self, coords):
+        if coords in self._fte_dict: return self._fte_dict[coords]
 
         ret_coords = [0]
         part = 0
@@ -849,6 +837,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             part += coords[i]
             ret_coords.insert(0, part)
 
+        self._fte_dict[coords] = ret_coords
         return ret_coords
 
     def _convert_epsilons_to_funds(self, coords):
@@ -954,26 +943,27 @@ class _OrderedMultiSet(object):
         return _OrderedMultiSet(ret_list)
 
 
-class _Weight(list):
+class _Weight(tuple):
     """
     This class represents a weight of a given simple Lie algebra.
     """
+
+    def __new__(cls, liealg, coords):
+        """
+
+        :param liealg:
+        :param coords:
+        :return:
+        """
+        return super(_Weight, cls).__new__(cls, coords)
 
     def __init__(self, liealg, coords):
         """
         :param liealg: A SimpleLieAlgebra object.
         :param coords: A list of numbers: coordinates for the weight in terms of the basis of fundamental weights
         """
-        list.__init__(self, coords)
         self.liealg = liealg
-        self.epsilon_coords = liealg._convert_funds_to_epsilons(coords)
-
-    def __hash__(self):
-        '''
-        Hash function for the weight.  Only takes into account the fundamental coordinates, not the
-        Lie algebra.
-        '''
-        return hash(tuple(self))
+        self.epsilon_coords = liealg._convert_funds_to_epsilons(self)
 
     def isDominant(self):
         """
@@ -993,14 +983,22 @@ class _Root(_Weight):
     This class represents an element of the root lattice of the given simple Lie algebra.
     """
 
+    def __new__(cls, liealg, coords):
+        """
+
+        :param liealg:
+        :param coords:
+        :return:
+        """
+        return super(_Root, cls).__new__(cls, liealg, liealg._convert_roots_to_funds(coords))
+
     def __init__(self, liealg, coords):
         """
         :param liealg: A SimpleLieAlgebra object.
         :param coords: A list of integers: coordinates for the weight in terms of the basis of simple roots.
         """
-        _Weight.__init__(self, liealg, liealg._convert_roots_to_funds(coords))
+        super(_Root, self).__init__(liealg, liealg._convert_roots_to_funds(coords))
         self.root_coords = coords
-        self.epsilon_coords = liealg._convert_funds_to_epsilons(self)
 
     def get_root_level(self):
         ret_val = 0

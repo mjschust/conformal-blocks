@@ -14,6 +14,7 @@ class Test(unittest.TestCase):
         wt1 = cbd._Weight(liealg, [0, 1, 4])
         wt2 = cbd._Weight(liealg, [1, 0, 2])
         cbb = cbd.ConformalBlocksBundle(liealg, [wt1,wt1,wt2,wt2,wt2,wt2], 5)
+        print(cbb.getRank())
         self.assertEqual(99, cbb.getRank(), "Rank incorrect")
         
         liealg = cbd.TypeALieAlgebra(1)
