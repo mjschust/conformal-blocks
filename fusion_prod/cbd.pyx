@@ -80,8 +80,10 @@ class ConformalBlocksBundle(object):
 
     def get_symmetrized_divisor(self):
         """
+        Computes the symmetrized divisor associated to the conformal blocks bundle.
 
-        :return:
+        :return: A list of numbers: the divisor given in the standard basis D_1, D_2,... of
+            the symmetric nef cone.
         """
 
         ret_val = []
@@ -189,8 +191,11 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
 
     def get_symmetrized_divisor(self):
         """
+        Computes the symmetrized divisor associated to the conformal blocks bundle.  Algorithm is
+        optimized for the symmetric case.
 
-        :return:
+        :return: A list of numbers: the divisor given in the standard basis D_1, D_2,... of
+            the symmetric nef cone.
         """
         ret_val = []
         n = len(self.weights)
