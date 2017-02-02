@@ -23,12 +23,12 @@ def experiment():
         #tot_weight = 3*wt.fund_coords[0] + 2*wt.fund_coords[1] + wt.fund_coords[2]
         #if tot_weight <= level: continue
         #if level >= tot_weight // (r+1): continue
-        divisor = cbb.getDivisor()   
+        divisor = cbb.get_symmetrized_divisor()
         if divisor[0] == 0: continue
         print(wt, cbb.getRank(), divisor)
 
 if __name__ == '__main__':
     #t0 = time.clock()
-    #experiment()
+    experiment()
     #print(time.clock() -t0)
-    cProfile.run('experiment()', sort='cumtime')
+    #cProfile.run('experiment()', sort='cumtime')

@@ -33,7 +33,7 @@ def experiment():
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, num_points, level)
         if cbb.getRank() == 0: continue
-        divisor = cbb.getDivisor()   
+        divisor = cbb.get_symmetrized_divisor()
         print(wt, cbb.getRank(), divisor, vec_cos(divisor, goal))
 
 if __name__ == '__main__':
