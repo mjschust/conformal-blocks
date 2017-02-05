@@ -57,8 +57,46 @@ class ConformalBlocksBundle(object):
             max_index = min_index + 1
 
         fus_prod = self.liealg.fusion(weights[min_index], weights[max_index], level)
-        indices = min_index, max_index
-        factor_list = [wt for (i, wt) in enumerate(weights) if i not in indices]
+        # indices = min_index, max_index
+        # factor_list = [wt for (i, wt) in enumerate(weights) if i not in indices]
+        factor_list = []
+        for i in range(len(weights)):
+            if i != min_index and i != max_index:
+                factor_list.append(weights[i])
+        multi_fus_prod = self.liealg.multi_fusion(factor_list, level)
+
+        ret_val = 0
+        for mu_star in fus_prod:
+            mult = fus_prod[mu_star]
+            mu = self.liealg.get_dual_weight(mu_star)
+            if mu in multi_fus_prod:
+                ret_val += mult * multi_fus_prod[mu]
+
+        return ret_val
+
+    def _alt_compute_CB_rank(self, weights, level):
+        # Find weights with largest and smallest corresponding rep's
+        min_dim = max_dim = self.liealg.get_rep_dim(weights[0])
+        min_index = max_index = 0
+        for i in range(len(weights)):
+            dim = self.liealg.get_rep_dim(weights[i])
+            if dim < min_dim:
+                min_dim = dim
+                min_index = i
+            if dim > max_dim:
+                max_dim = dim
+                max_index = i
+        # Covers the case when all dimensions are the same
+        if min_index == max_index:
+            max_index = min_index + 1
+
+        fus_prod = self.liealg.fusion(weights[min_index], weights[max_index], level)
+        # indices = min_index, max_index
+        # factor_list = [wt for (i, wt) in enumerate(weights) if i not in indices]
+        factor_list = []
+        for i in range(len(weights)):
+            if i != min_index and i != max_index:
+                factor_list.append(weights[i])
 
         # Three point case is given by the fusion product
         if len(factor_list) == 1:
@@ -70,9 +108,10 @@ class ConformalBlocksBundle(object):
 
         # If more than three points, factor
         ret_val = 0
-        for wt in fus_prod.keys():
-            if fus_prod[wt] > 0:
-                ret_val = ret_val + fus_prod[wt] * self._compute_CB_rank(factor_list + [wt], level)
+        for wt in fus_prod:
+            mult = fus_prod[wt]
+            if mult > 0:
+                ret_val = ret_val + mult * self._compute_CB_rank(factor_list + [wt], level)
 
         return ret_val
 
@@ -170,6 +209,50 @@ class ConformalBlocksBundle(object):
                             wt3] * prod4[wt4]
 
         return ret_val
+
+
+# cdef _compute_CB_rank(liealg, list weights, int level):
+#     # Find weights with largest and smallest corresponding rep's
+#     cdef int min_dim, max_dim, min_index, max_index, dim, i
+#     min_dim = max_dim = liealg.get_rep_dim(weights[0])
+#     min_index = max_index = 0
+#     for i in range(len(weights)):
+#         dim = liealg.get_rep_dim(weights[i])
+#         if dim < min_dim:
+#             min_dim = dim
+#             min_index = i
+#         if dim > max_dim:
+#             max_dim = dim
+#             max_index = i
+#     # Covers the case when all dimensions are the same
+#     if min_index == max_index:
+#         max_index = min_index + 1
+#
+#     cdef dict fus_prod = liealg.fusion(weights[min_index], weights[max_index], level)
+#     #indices = min_index, max_index
+#     #factor_list = [wt for (i, wt) in enumerate(weights) if i not in indices]
+#     cdef list factor_list = []
+#     for i in range(len(weights)):
+#         if i != min_index and i != max_index:
+#             factor_list.append(weights[i])
+#
+#     # Three point case is given by the fusion product
+#     if len(factor_list) == 1:
+#         dual_wt3 = liealg.get_dual_weight(factor_list[0])
+#         if dual_wt3 in fus_prod:
+#             return fus_prod[dual_wt3]
+#         else:
+#             return 0
+#
+#     # If more than three points, factor
+#     cdef int ret_val = 0
+#     cdef int mult
+#     for wt in fus_prod:
+#         mult = fus_prod[wt]
+#         if mult > 0:
+#             ret_val = ret_val + mult * _compute_CB_rank(liealg, factor_list + [wt], level)
+#
+#     return ret_val
 
 
 class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
