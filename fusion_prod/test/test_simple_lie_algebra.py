@@ -10,6 +10,13 @@ import fusion_prod.cbd as cbd
 class Test(unittest.TestCase):
     
     def testSL2OrbitIter(self):
+        liealg = cbd.TypeALieAlgebra(3)
+        wt = (1,0,2)
+        for wt2 in liealg.get_orbit_iter(wt):
+            ep_coords = liealg._convert_funds_to_epsilons(wt2)
+            norm_coords = [i - min(ep_coords) for i in ep_coords]
+            print(norm_coords)
+
         liealg = cbd.TypeALieAlgebra(1)
         wt = tuple([0])
         orbit_wt = wt
@@ -62,7 +69,7 @@ class Test(unittest.TestCase):
         dec_wt = tuple([3])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
-    
+
     def testSL2Fusion(self):
         liealg = cbd.TypeALieAlgebra(1)
         decomp = liealg.fusion([0], [0],1)
@@ -81,7 +88,7 @@ class Test(unittest.TestCase):
         dec_wt = tuple([0])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
-        
+
         decomp = liealg.fusion([1], [1],2)
         dec_wt = tuple([2])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
@@ -100,7 +107,7 @@ class Test(unittest.TestCase):
         dec_wt = tuple([3])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
-        
+
         decomp = liealg.fusion([5], [2],6)
         dec_wt = tuple([7])
         self.assertFalse(dec_wt in decomp, "Tensor decomp incorrect")
@@ -110,7 +117,7 @@ class Test(unittest.TestCase):
         dec_wt = tuple([3])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
-        
+
         decomp = liealg.fusion([5], [2],5)
         dec_wt = tuple([7])
         self.assertFalse(dec_wt in decomp, "Tensor decomp incorrect")

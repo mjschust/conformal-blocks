@@ -8,7 +8,7 @@ import cProfile, time
 #and small weights.
 #Optimization: 63 seconds -> 10.5 sec (profiler time)
 #
-#Second test (after above optimizations
+#Second test (after above optimizations)
 #----------
 #Tested the performance of rank and divisor calculations for r=5, l=4, n=9
 #Original:17 seconds
@@ -16,10 +16,16 @@ import cProfile, time
 #After variable cdefs and optimizations: 12.3
 #Removing cdefs: 15.3
 #Using multi_fusion instead of factoring: 4.5 sec
+#Optimized orbit iterator: 3 sec
+#
+#Third test (after above optimizations)
+#----------
+#Tested the performance of rank and divisor calculations for r=5, l=4, n=10
+#Original:52 seconds
 def experiment():
     rank = 5
-    level = 3
-    num_points = 9
+    level = 4
+    num_points = 10
 
     liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
     print("Weight", "Rank", "Divisor", "Cosine")

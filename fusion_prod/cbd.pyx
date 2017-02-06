@@ -36,7 +36,7 @@ class ConformalBlocksBundle(object):
         :return: An integer: the rank of the bundle.
         """
         if self._rank < 0:
-            self._rank = long(round(self._alt_compute_CB_rank(self.weights, self.level)))
+            self._rank = long(round(self._compute_CB_rank(self.weights, self.level)))
 
         return self._rank
 
@@ -924,7 +924,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
 
     def get_orbit_iter(self, wt):
-        return self._TypeAOrbitIterator(self, wt)
+        return self._alt_TypeAOrbitIterator(self, wt)
 
     def _convert_funds_to_epsilons(self, coords):
         if coords in self._fte_dict: return self._fte_dict[coords]
@@ -1006,6 +1006,92 @@ class TypeALieAlgebra(SimpleLieAlgebra):
                 self._index_list[j] = 0
 
             return tuple(self.liealg._convert_epsilons_to_funds(new_ep_coords))
+
+    class _alt_TypeAOrbitIterator(object):
+        '''
+        Optimized iterator object that traverses the Weyl group orbit of a given weight.
+
+        Attributes:
+            no public attributes
+        '''
+        def __init__(self, liealg, wt):
+            ep_coords = liealg._convert_funds_to_epsilons(liealg.reflect_to_chamber(wt))
+
+            #Construct list of items and multiplicities
+            self._item_list = [ep_coords[0]]
+            cur_item = ep_coords[0]
+            rem_list = [0]
+            for item in ep_coords:
+                if item < cur_item:
+                    self._item_list.append(item)
+                    rem_list.append(1)
+                    cur_item = item
+                else:
+                    rem_list[-1] += 1
+
+            #Contruct matrix of remaining items, and initial index list
+            index_list = []
+            rem_mat = [list(rem_list)]
+            for i in range(len(ep_coords)):
+                j = 0
+                while rem_mat[i][j] == 0:
+                    j += 1
+                index_list.append(j)
+                rem_mat.append(list(rem_mat[i]))
+                rem_mat[i+1][j] -= 1
+
+            self._index_list = index_list
+            self._rem_mat = rem_mat
+            self.done = False
+            self.liealg = liealg
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            if self.done: raise StopIteration()
+            r = len(self._index_list)
+            num_items = len(self._item_list)
+
+            #Construct new weight
+            ep_coords = []
+            for index in self._index_list:
+                ep_coords.append(self._item_list[index])
+            ret_val = tuple(self.liealg._convert_epsilons_to_funds(ep_coords))
+
+            #Find index to increment
+            i = r-2
+            j = 0
+            while i >= 0:
+                j = self._index_list[i] + 1
+                while j < num_items:
+                    if self._rem_mat[i][j] > 0: break
+                    j += 1
+                if j < num_items: break
+                i -= 1
+
+            #If we're finished, return the last weight
+            if i < 0:
+                self.done = True
+                return ret_val
+
+            #Increment indices
+            self._index_list[i] = j
+            self._rem_mat[i+1] = list(self._rem_mat[i])
+            self._rem_mat[i+1][j] -= 1
+            i += 1
+            while i < r:
+                j = 0
+                while self._rem_mat[i][j] == 0:
+                    j += 1
+                self._index_list[i] = j
+                self._rem_mat[i + 1] = list(self._rem_mat[i])
+                self._rem_mat[i + 1][j] -= 1
+                i += 1
+
+            return ret_val
+
+
 
 
 class _OrderedMultiSet(object):
