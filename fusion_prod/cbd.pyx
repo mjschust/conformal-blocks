@@ -36,7 +36,7 @@ class ConformalBlocksBundle(object):
         :return: An integer: the rank of the bundle.
         """
         if self._rank < 0:
-            self._rank = long(round(self._compute_CB_rank(self.weights, self.level)))
+            self._rank = long(round(self._alt_compute_CB_rank(self.weights, self.level)))
 
         return self._rank
 
@@ -111,7 +111,7 @@ class ConformalBlocksBundle(object):
         for wt in fus_prod:
             mult = fus_prod[wt]
             if mult > 0:
-                ret_val = ret_val + mult * self._compute_CB_rank(factor_list + [wt], level)
+                ret_val = ret_val + mult * self._alt_compute_CB_rank(factor_list + [wt], level)
 
         return ret_val
 

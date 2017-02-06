@@ -30,7 +30,7 @@ def experiment():
         print(wt, cbb.getRank(), divisor)
 
 if __name__ == '__main__':
-    t0 = time.clock()
-    experiment()
-    print(time.clock() -t0)
-    #cProfile.run('experiment()', sort='cumtime')
+    #t0 = time.clock()
+    #experiment()
+    #print(time.clock() -t0)
+    cProfile.run('experiment()', sort='cumtime')
