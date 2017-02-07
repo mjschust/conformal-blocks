@@ -10,7 +10,7 @@ import cProfile, time
 #
 #Second test (after above optimizations)
 #----------
-#Tested the performance of rank and divisor calculations for r=5, l=4, n=9
+#Tested the performance of rank and divisor calculations for r=5, l=3, n=9
 #Original:17 seconds
 #After cdef function: 14.5
 #After variable cdefs and optimizations: 12.3
@@ -25,7 +25,7 @@ import cProfile, time
 def experiment():
     rank = 5
     level = 3
-    num_points = 10
+    num_points = 9
 
     liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
     print("Weight", "Rank", "Divisor", "Cosine")
