@@ -6,7 +6,7 @@ Created on Nov 21, 2016
 from __future__ import division
 import fusion_prod.cbd as cbd
 import math
-import cProfile
+import cProfile, time
 
 #Computes the cosine of the angle between two vectors
 def vec_cos(v1,v2):
@@ -22,8 +22,9 @@ def vec_cos(v1,v2):
 #Iterates through symmetric conformal blocks divisors of specified Lie rank, level,
 #and number of points, and compares them to a given divisor by computing the
 #cosine of the angle between them.
+#16.8 seconds
 def experiment():
-    rank = 4
+    rank = 5
     level = 3
     num_points = 9
     goal = [1, 1, 2]
@@ -37,7 +38,9 @@ def experiment():
         print(wt, cbb.getRank(), divisor, vec_cos(divisor, goal))
 
 if __name__ == '__main__':
+    t0 = time.clock()
     experiment()
+    print(time.clock() -t0)
     #cProfile.run('experiment()', sort='cumtime')
 
         

@@ -11,18 +11,18 @@ class Test(unittest.TestCase):
 
     def testConformalBlocksRanks(self):
         liealg = cbd.TypeALieAlgebra(3)
-        wt1 = cbd._Weight(liealg, [0, 1, 4])
-        wt2 = cbd._Weight(liealg, [1, 0, 2])
+        wt1 = tuple([0, 1, 4])
+        wt2 = tuple([1, 0, 2])
         cbb = cbd.ConformalBlocksBundle(liealg, [wt1,wt1,wt2,wt2,wt2,wt2], 5)
         self.assertEqual(99, cbb.getRank(), "Rank incorrect")
         
         liealg = cbd.TypeALieAlgebra(1)
-        wt1 = cbd._Weight(liealg, [1])
+        wt1 = tuple([1])
         cbb = cbd.ConformalBlocksBundle(liealg, [wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1], 1)
         self.assertEqual(1, cbb.getRank(), "Rank incorrect")
         
         liealg = cbd.TypeALieAlgebra(2)
-        wt1 = cbd._Weight(liealg, [0, 1])
+        wt1 = tuple([0, 1])
         cbb = cbd.ConformalBlocksBundle(liealg, [wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1], 2)
         #print(cbb.getRank())
 
@@ -109,9 +109,9 @@ class Test(unittest.TestCase):
 
     def testFCurve(self):
         liealg = cbd.TypeALieAlgebra(4)
-        wt = cbd._Weight(liealg, [0, 1, 0, 0])
-        wt2 = cbd._Weight(liealg, [0, 0, 1, 0])
-        wt3 = cbd._Weight(liealg, [0, 0, 0, 1])
+        wt = tuple([0, 1, 0, 0])
+        wt2 = tuple([0, 0, 1, 0])
+        wt3 = tuple([0, 0, 0, 1])
         cbb = cbd.ConformalBlocksBundle(liealg, [wt, wt2, wt2, wt2, wt3], 1)
         self.assertEqual(1, cbb.getRank(), "Rank incorrect")
         self.assertEqual(0, cbb.intersect_F_curve([[1, 2], [3], [4], [5]]), "F-curve intersection incorrect")
@@ -119,9 +119,9 @@ class Test(unittest.TestCase):
         self.assertEqual(2, cbb.intersect_F_curve([[1], [2], [3], [4, 5]]), "F-curve intersection incorrect")
 
         liealg = cbd.TypeALieAlgebra(6)
-        wt = cbd._Weight(liealg, [0, 0, 1, 0, 0, 0])
-        wt2 = cbd._Weight(liealg, [0, 0, 0, 1, 0, 0])
-        wt3 = cbd._Weight(liealg, [0, 0, 0, 0, 0, 1])
+        wt = tuple([0, 0, 1, 0, 0, 0])
+        wt2 = tuple([0, 0, 0, 1, 0, 0])
+        wt3 = tuple([0, 0, 0, 0, 0, 1])
         cbb = cbd.ConformalBlocksBundle(liealg, [wt,wt2,wt2,wt2,wt3], 1)
         self.assertEqual(1, cbb.getRank(), "Rank incorrect")
         self.assertEqual(1, cbb.intersect_F_curve([[1],[2,3],[4],[5]]), "F-curve intersection incorrect")

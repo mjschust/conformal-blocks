@@ -23,7 +23,7 @@ class ConformalBlocksBundle(object):
         self.liealg = liealg
         new_weights = []
         for wt in weights:
-            new_weights.append(_Weight(liealg, wt))
+            new_weights.append(tuple(wt))
         self.weights = new_weights
         self.level = level
         self._rank = -1
@@ -36,18 +36,16 @@ class ConformalBlocksBundle(object):
         :return: An integer: the rank of the bundle.
         """
         if self._rank < 0:
-            self._rank = self._compute_CB_rank(self.weights, self.level)
+            self._rank = long(round(self._compute_CB_rank(self.weights, self.level)))
 
         return self._rank
 
     def _compute_CB_rank(self, weights, level):
         # Find weights with largest and smallest corresponding rep's
-        rep = IrrRep(self.liealg, weights[0])
-        min_dim = max_dim = rep.get_dimension()
+        min_dim = max_dim = self.liealg.get_rep_dim(weights[0])
         min_index = max_index = 0
         for i in range(len(weights)):
-            rep = IrrRep(self.liealg, weights[i])
-            dim = rep.get_dimension()
+            dim = self.liealg.get_rep_dim(weights[i])
             if dim < min_dim:
                 min_dim = dim
                 min_index = i
@@ -59,8 +57,47 @@ class ConformalBlocksBundle(object):
             max_index = min_index + 1
 
         fus_prod = self.liealg.fusion(weights[min_index], weights[max_index], level)
-        indices = min_index, max_index
-        factor_list = [wt for (i, wt) in enumerate(weights) if i not in indices]
+        # indices = min_index, max_index
+        # factor_list = [wt for (i, wt) in enumerate(weights) if i not in indices]
+        factor_list = []
+        for i in range(len(weights)):
+            if i != min_index and i != max_index:
+                factor_list.append(weights[i])
+        multi_fus_prod = self.liealg.multi_fusion(factor_list, level)
+
+        ret_val = 0
+        for mu_star in fus_prod:
+            mult = fus_prod[mu_star]
+            mu = self.liealg.get_dual_weight(mu_star)
+            if mu in multi_fus_prod:
+                ret_val += mult * multi_fus_prod[mu]
+
+        return ret_val
+
+    #Original version of the above method.  Uses less memory but runs an order of magnitude slower.
+    def _alt_compute_CB_rank(self, weights, level):
+        # Find weights with largest and smallest corresponding rep's
+        min_dim = max_dim = self.liealg.get_rep_dim(weights[0])
+        min_index = max_index = 0
+        for i in range(len(weights)):
+            dim = self.liealg.get_rep_dim(weights[i])
+            if dim < min_dim:
+                min_dim = dim
+                min_index = i
+            if dim > max_dim:
+                max_dim = dim
+                max_index = i
+        # Covers the case when all dimensions are the same
+        if min_index == max_index:
+            max_index = min_index + 1
+
+        fus_prod = self.liealg.fusion(weights[min_index], weights[max_index], level)
+        # indices = min_index, max_index
+        # factor_list = [wt for (i, wt) in enumerate(weights) if i not in indices]
+        factor_list = []
+        for i in range(len(weights)):
+            if i != min_index and i != max_index:
+                factor_list.append(weights[i])
 
         # Three point case is given by the fusion product
         if len(factor_list) == 1:
@@ -72,9 +109,10 @@ class ConformalBlocksBundle(object):
 
         # If more than three points, factor
         ret_val = 0
-        for wt in fus_prod.keys():
-            if fus_prod[wt] > 0:
-                ret_val = ret_val + fus_prod[wt] * self._compute_CB_rank(factor_list + [wt], level)
+        for wt in fus_prod:
+            mult = fus_prod[wt]
+            if mult > 0:
+                ret_val = ret_val + mult * self._alt_compute_CB_rank(factor_list + [wt], level)
 
         return ret_val
 
@@ -241,7 +279,7 @@ class IrrRep(object):
 
         # if not high_weight.isDominant(): raise ValueError("Highest weight must be dominant")
         self.liealg = liealg
-        self.high_weight = _Weight(liealg, high_weight)
+        self.high_weight = tuple(high_weight)
         self._dom_weights = set()
         self._dom_char = {}
 
@@ -251,22 +289,8 @@ class IrrRep(object):
 
         :return: An integer: the dimension of the representation.
         """
-        if self.high_weight in self.liealg._rep_dim_dict: return self.liealg._rep_dim_dict[self.high_weight]
+        return self.liealg.get_rep_dim(self.high_weight)
 
-        lam = self.high_weight
-        rho = self.liealg.get_rho()
-        pos_roots = self.liealg.get_positive_roots()
-
-        numer = 1
-        denom = 1
-        for root in pos_roots:
-            a = self.liealg.killing_form(lam, root)
-            b = self.liealg.killing_form(rho, root)
-            numer = numer * (a + b)
-            denom = denom * b
-
-        self.liealg._rep_dim_dict[self.high_weight] = numer / denom
-        return numer / denom
 
     def get_dominant_character(self):
         """
@@ -277,8 +301,8 @@ class IrrRep(object):
         :return: A dictionary where the keys are tuples and the values are positive integers
             corresponding to the multiplicity of the wt space.
         """
-        if self.high_weight in self._dom_char:
-            return self._dom_char
+        #if self.high_weight in self._dom_char:
+        #    return self._dom_char
 
         pos_roots = self.liealg.get_positive_roots()
         root_level_dict = {}
@@ -310,7 +334,7 @@ class IrrRep(object):
                 for root_lev in root_level_dict.keys():
                     for root in root_level_dict[root_lev]:
                         new_weight = self.liealg._sub_weights(wt, root)
-                        if new_weight.isDominant():
+                        if self.liealg.is_dominant(new_weight):
                             if level + root_lev in weight_level_dict:
                                 if not new_weight in weight_level_dict[level + root_lev]:
                                     weight_level_dict[level + root_lev].add(new_weight)
@@ -380,7 +404,35 @@ class SimpleLieAlgebra(object):
         if store_fusion: self._fusion_dict = {}
         self._pos_roots = []
         self._rep_dim_dict = {}
+        self._fte_dict = {}
 
+    def get_rep_dim(self, high_weight):
+        """
+        Computes the dimension of the representation with given highest weight.
+        Implements Weyl's dimension formula.  !!!Currently expects a tuple!!!
+
+        :param high_weight: A list or tuple of non-negative integers of length equal to self.rank:
+            represents fundamental weight coordinates of the highest weight of the
+            irreducible representation.
+        :return: An integer: the dimension of the representation.
+        """
+        #high_weight = tuple(high_weight)
+        if high_weight in self._rep_dim_dict: return self._rep_dim_dict[high_weight]
+
+        lam = high_weight
+        rho = self.get_rho()
+        pos_roots = self.get_positive_roots()
+
+        numer = 1
+        denom = 1
+        for root in pos_roots:
+            a = self.killing_form(lam, root)
+            b = self.killing_form(rho, root)
+            numer = numer * (a + b)
+            denom = denom * b
+
+        self._rep_dim_dict[high_weight] = numer / denom
+        return numer / denom
 
     def tensor(self, wt1, wt2):
         """
@@ -398,7 +450,7 @@ class SimpleLieAlgebra(object):
 
         # Want wt to have larger dimension
         rep1, rep2 = IrrRep(self, wt1), IrrRep(self, wt2)
-        if rep1.get_dimension() < rep2.get_dimension():
+        if self.get_rep_dim(rep1.high_weight) < self.get_rep_dim(rep2.high_weight):
             rep1, rep2 = rep2, rep1
         wt = rep1.high_weight
         wt2 = rep2.high_weight
@@ -413,7 +465,7 @@ class SimpleLieAlgebra(object):
                 new_sum = self._add_weights(lam_rho_sum, orbit_weight)
                 new_dom_weight, parity = self.reflect_to_chamber_with_parity(new_sum)
                 new_dom_weight = self._sub_weights(new_dom_weight, rho)
-                if not new_dom_weight.isDominant(): continue
+                if not self.is_dominant(new_dom_weight): continue
                 if new_dom_weight in ret_dict:
                     ret_dict[new_dom_weight] = ret_dict[new_dom_weight] + dom_char[dom_weight] * parity
                 else:
@@ -436,9 +488,11 @@ class SimpleLieAlgebra(object):
             corresponding representation in the fusion product of wt1 and wt2.
         """
 
+        #rep1, rep2 = IrrRep(self, wt1), IrrRep(self, wt2)
+        wt1, wt2 = tuple(wt1), tuple(wt2)
+        if self.store_fusion and (wt1, wt2, ell) in self._fusion_dict:
+            return self._fusion_dict[(wt1, wt2, ell)]
         rep1, rep2 = IrrRep(self, wt1), IrrRep(self, wt2)
-        if self.store_fusion and (rep1.high_weight, rep2.high_weight, ell) in self._fusion_dict:
-            return self._fusion_dict[(rep1.high_weight, rep2.high_weight, ell)]
 
         ten_decom = self.tensor(wt1, wt2)
         ret_dict = {}
@@ -450,7 +504,7 @@ class SimpleLieAlgebra(object):
             wt_rho = self._add_weights(wt, rho)
             new_weight, parity = self.reflect_to_alcove_with_parity(wt_rho, ell + self.rank + 1)
             lev_ell_weight = self._sub_weights(new_weight, rho)
-            if not lev_ell_weight.isDominant() or self.get_level(lev_ell_weight) > ell: continue
+            if not self.is_dominant(lev_ell_weight) or self.get_level(lev_ell_weight) > ell: continue
 
             if lev_ell_weight in ret_dict:
                 ret_dict[lev_ell_weight] = ret_dict[lev_ell_weight] + ten_decom[wt] * parity
@@ -555,7 +609,7 @@ class SimpleLieAlgebra(object):
         :param wt: A list of numbers: a weight.
         :return: A number: the Casimir scalar of wt.
         """
-        twoRho = _Weight(self, [2 for i in range(self.rank)])
+        twoRho = tuple([2 for i in range(self.rank)])
         wt2 = self._add_weights(wt, twoRho)
         return self.killing_form(wt, wt2)
 
@@ -566,6 +620,19 @@ class SimpleLieAlgebra(object):
         :return: An integer: the dual coxeter number.
         """
         raise NotImplementedError
+
+    def is_dominant(self, wt):
+        """
+        Checks if the weight is dominant.
+
+        :param wt: A list of numbers; a weight of the Lie algebra.
+        :return: A boolean.
+        """
+        for coord in wt:
+            if coord < 0:
+                return False
+
+        return True
 
     def get_level(self, wt):
         """
@@ -598,7 +665,7 @@ class SimpleLieAlgebra(object):
         for i in range(self.rank):
             ret_coords.append(1)
 
-        return _Weight(self, ret_coords)
+        return tuple(ret_coords)
 
     def get_positive_roots(self):
         """
@@ -615,7 +682,7 @@ class SimpleLieAlgebra(object):
         :param level: A positive integer.
         :return: A list of weights with level less than level.
         """
-        return [_Weight(self, coords) for coords in self._get_weights(level, self.rank)]
+        return [tuple(coords) for coords in self._get_weights(level, self.rank)]
 
     def _get_weights(self, level, rank):
         ret_list = []
@@ -698,7 +765,7 @@ class SimpleLieAlgebra(object):
         for i in range(len(wt1)):
             ret_coords.append(wt1[i] + wt2[i])
 
-        return _Weight(self, ret_coords)
+        return tuple(ret_coords)
 
     def _sub_weights(self, wt1, wt2):
         '''
@@ -709,7 +776,7 @@ class SimpleLieAlgebra(object):
         for i in range(len(wt1)):
             ret_coords.append(wt1[i] - wt2[i])
 
-        return _Weight(self, ret_coords)
+        return tuple(ret_coords)
 
 
 
@@ -720,11 +787,13 @@ class TypeALieAlgebra(SimpleLieAlgebra):
 
     def killing_form(self, wt1, wt2):
         ret_val = 0
+        ep_coords1 = self._convert_funds_to_epsilons(wt1)
+        ep_coords2 = self._convert_funds_to_epsilons(wt2)
 
         for i in range(self.rank + 1):
-            ret_val = ret_val + wt1.epsilon_coords[i] * wt2.epsilon_coords[i]
+            ret_val = ret_val + ep_coords1[i] * ep_coords2[i]
 
-        n = sum(wt1.epsilon_coords) * sum(wt2.epsilon_coords)
+        n = sum(ep_coords1) * sum(ep_coords2)
 
         ret_val = ret_val - n / (self.rank + 1)
 
@@ -734,10 +803,10 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return self.rank + 1
 
     def get_level(self, wt):
-        return wt.epsilon_coords[0]
+        return sum(wt)
 
     def get_dual_weight(self, wt):
-        return _Weight(self, wt[::-1])
+        return tuple(wt[::-1])
 
     def get_positive_roots(self):
         if len(self._pos_roots) > 0: return self._pos_roots
@@ -759,12 +828,12 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return ret_list
 
     def reflect_to_chamber(self, wt):
-        ret_coords = self._insertsort(wt.epsilon_coords)
+        ret_coords = self._insertsort(self._convert_funds_to_epsilons(wt))
 
         for i in range(len(ret_coords)):
             ret_coords[i] = ret_coords[i] - ret_coords[-1]
 
-        return _Weight(self, self._convert_epsilons_to_funds(ret_coords))
+        return tuple(self._convert_epsilons_to_funds(ret_coords))
 
     def _insertsort(self, coords):
         ret_list = list(coords)
@@ -778,12 +847,12 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return ret_list
 
     def reflect_to_chamber_with_parity(self, wt):
-        ret_coords, parity = self._insertsort_parity(wt.epsilon_coords)
+        ret_coords, parity = self._insertsort_parity(self._convert_funds_to_epsilons(wt))
 
         for i in range(len(ret_coords)):
             ret_coords[i] = ret_coords[i] - ret_coords[-1]
 
-        return _Weight(self, self._convert_epsilons_to_funds(ret_coords)), parity
+        return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
 
     def _insertsort_parity(self, coords):
         ret_list = list(coords)
@@ -799,7 +868,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return ret_list, parity
 
     def reflect_to_alcove_with_parity(self, wt, ell):
-        ret_coords, parity = self._insertsort_parity(wt.epsilon_coords)
+        ret_coords, parity = self._insertsort_parity(self._convert_funds_to_epsilons(wt))
         ret_coords = [x - ret_coords[-1] for x in ret_coords]
 
         while (ret_coords[0] > ell):
@@ -809,12 +878,13 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             ret_coords = [x - ret_coords[-1] for x in ret_coords]
             parity = parity * -1 * fin_parity
 
-        return _Weight(self, self._convert_epsilons_to_funds(ret_coords)), parity
+        return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
 
     def get_orbit_iter(self, wt):
-        return self._TypeAOrbitIterator(wt)
+        return self._TypeAOrbitIterator(self, wt)
 
     def _convert_funds_to_epsilons(self, coords):
+        if coords in self._fte_dict: return self._fte_dict[coords]
 
         ret_coords = [0]
         part = 0
@@ -822,6 +892,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             part += coords[i]
             ret_coords.insert(0, part)
 
+        self._fte_dict[coords] = ret_coords
         return ret_coords
 
     def _convert_epsilons_to_funds(self, coords):
@@ -845,135 +916,110 @@ class TypeALieAlgebra(SimpleLieAlgebra):
 
     class _TypeAOrbitIterator(object):
         '''
-        Iterator object that traverses the Weyl group orbit of a given weight
+        Optimized iterator object that traverses the Weyl group orbit of a given weight.
 
         Attributes:
             no public attributes
         '''
+        def __init__(self, liealg, wt):
+            ep_coords = liealg._convert_funds_to_epsilons(liealg.reflect_to_chamber(wt))
 
-        def __init__(self, wt):
-            self._init_weight = wt.liealg.reflect_to_chamber(wt)
-            oms = _OrderedMultiSet(self._init_weight.epsilon_coords)
-            self._oms_list = []
-            self._index_list = []
-            for i in self._init_weight.epsilon_coords:
-                self._oms_list.append(oms)
-                self._index_list.append(0)
-                oms = oms.remove(0)
+            #Construct list of items and multiplicities
+            self._item_list = [ep_coords[0]]
+            cur_item = ep_coords[0]
+            rem_list = [0]
+            for item in ep_coords:
+                if item < cur_item:
+                    self._item_list.append(item)
+                    rem_list.append(1)
+                    cur_item = item
+                else:
+                    rem_list[-1] += 1
+
+            #Contruct matrix of remaining items, and initial index list
+            index_list = []
+            rem_mat = [list(rem_list)]
+            for i in range(len(ep_coords)):
+                j = 0
+                while rem_mat[i][j] == 0:
+                    j += 1
+                index_list.append(j)
+                rem_mat.append(list(rem_mat[i]))
+                rem_mat[i+1][j] -= 1
+
+            self._index_list = index_list
+            self._rem_mat = rem_mat
             self.done = False
-            self.liealg = wt.liealg
+            self.liealg = liealg
 
         def __iter__(self):
             return self
 
         def next(self):
             if self.done: raise StopIteration()
+            r = len(self._index_list)
+            num_items = len(self._item_list)
 
-            new_ep_coords = []
-            for i in range(len(self._oms_list)):
-                new_ep_coords.append(self._oms_list[i].get(self._index_list[i]))
+            #Construct new weight
+            ep_coords = []
+            for index in self._index_list:
+                ep_coords.append(self._item_list[index])
+            ret_val = tuple(self.liealg._convert_epsilons_to_funds(ep_coords))
 
-            # Increment indices
-            i = len(self._index_list) - 1
+            #Find index to increment
+            i = r-2
+            j = 0
             while i >= 0:
-                if self._index_list[i] < self._oms_list[i].num_unique_elements() - 1:
-                    break
-                i = i - 1
+                j = self._index_list[i] + 1
+                while j < num_items:
+                    if self._rem_mat[i][j] > 0: break
+                    j += 1
+                if j < num_items: break
+                i -= 1
+
+            #If we're finished, return the last weight
             if i < 0:
                 self.done = True
-                return _Weight(self.liealg, self.liealg._convert_epsilons_to_funds(new_ep_coords))
+                return ret_val
 
-            self._index_list[i] = self._index_list[i] + 1
-            self._oms_list[i + 1] = self._oms_list[i].remove(self._index_list[i])
-            for j in range(i + 1, len(self._index_list)):
-                if j + 1 < len(self._index_list):
-                    self._oms_list[j + 1] = self._oms_list[j].remove(0)
-                self._index_list[j] = 0
+            #Increment indices
+            self._index_list[i] = j
+            self._rem_mat[i+1] = list(self._rem_mat[i])
+            self._rem_mat[i+1][j] -= 1
+            i += 1
+            while i < r:
+                j = 0
+                while self._rem_mat[i][j] == 0:
+                    j += 1
+                self._index_list[i] = j
+                self._rem_mat[i + 1] = list(self._rem_mat[i])
+                self._rem_mat[i + 1][j] -= 1
+                i += 1
 
-            return _Weight(self.liealg, self.liealg._convert_epsilons_to_funds(new_ep_coords))
-
-
-class _OrderedMultiSet(object):
-    '''
-    A simple immutable multiset structure.
-    '''
-
-    def __init__(self, initial_list):
-        self._multi_set = {}
-
-        for el in initial_list:
-            if el in self._multi_set:
-                self._multi_set[el] = self._multi_set[el] + 1
-            else:
-                self._multi_set[el] = 1
-        self._key_list = sorted(self._multi_set.keys())
-
-    def num_unique_elements(self):
-        return len(self._key_list)
-
-    def get(self, i):
-        return self._key_list[i]
-
-    def remove(self, ind):
-        ret_list = []
-        for el in self._key_list:
-            if el == self.get(ind):
-                for i in range(self._multi_set[el] - 1):
-                    ret_list.append(el)
-            else:
-                for i in range(self._multi_set[el]):
-                    ret_list.append(el)
-
-        return _OrderedMultiSet(ret_list)
+            return ret_val
 
 
-class _Weight(list):
-    """
-    This class represents a weight of a given simple Lie algebra.
-    """
-
-    def __init__(self, liealg, coords):
-        """
-        :param liealg: A SimpleLieAlgebra object.
-        :param coords: A list of numbers: coordinates for the weight in terms of the basis of fundamental weights
-        """
-        list.__init__(self, coords)
-        self.liealg = liealg
-        self.epsilon_coords = liealg._convert_funds_to_epsilons(coords)
-
-    def __hash__(self):
-        '''
-        Hash function for the weight.  Only takes into account the fundamental coordinates, not the
-        Lie algebra.
-        '''
-        return hash(tuple(self))
-
-    def isDominant(self):
-        """
-        Checks if the weight is dominant.
-
-        :return: A boolean.
-        """
-        for coord in self:
-            if coord < 0:
-                return False
-
-        return True
-
-
-class _Root(_Weight):
+class _Root(tuple):
     """
     This class represents an element of the root lattice of the given simple Lie algebra.
     """
+
+    def __new__(cls, liealg, coords):
+        """
+
+        :param liealg:
+        :param coords:
+        :return:
+        """
+        return super(_Root, cls).__new__(cls, liealg._convert_roots_to_funds(coords))
 
     def __init__(self, liealg, coords):
         """
         :param liealg: A SimpleLieAlgebra object.
         :param coords: A list of integers: coordinates for the weight in terms of the basis of simple roots.
         """
-        _Weight.__init__(self, liealg, liealg._convert_roots_to_funds(coords))
+        self.liealg = liealg
         self.root_coords = coords
-        self.epsilon_coords = liealg._convert_funds_to_epsilons(self)
 
     def get_root_level(self):
         ret_val = 0
