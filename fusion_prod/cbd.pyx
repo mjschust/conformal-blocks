@@ -74,6 +74,7 @@ class ConformalBlocksBundle(object):
 
         return ret_val
 
+    #Original version of the above method.  Uses less memory but runs an order of magnitude slower.
     def _alt_compute_CB_rank(self, weights, level):
         # Find weights with largest and smallest corresponding rep's
         min_dim = max_dim = self.liealg.get_rep_dim(weights[0])
@@ -209,50 +210,6 @@ class ConformalBlocksBundle(object):
                             wt3] * prod4[wt4]
 
         return ret_val
-
-
-# cdef _compute_CB_rank(liealg, list weights, int level):
-#     # Find weights with largest and smallest corresponding rep's
-#     cdef int min_dim, max_dim, min_index, max_index, dim, i
-#     min_dim = max_dim = liealg.get_rep_dim(weights[0])
-#     min_index = max_index = 0
-#     for i in range(len(weights)):
-#         dim = liealg.get_rep_dim(weights[i])
-#         if dim < min_dim:
-#             min_dim = dim
-#             min_index = i
-#         if dim > max_dim:
-#             max_dim = dim
-#             max_index = i
-#     # Covers the case when all dimensions are the same
-#     if min_index == max_index:
-#         max_index = min_index + 1
-#
-#     cdef dict fus_prod = liealg.fusion(weights[min_index], weights[max_index], level)
-#     #indices = min_index, max_index
-#     #factor_list = [wt for (i, wt) in enumerate(weights) if i not in indices]
-#     cdef list factor_list = []
-#     for i in range(len(weights)):
-#         if i != min_index and i != max_index:
-#             factor_list.append(weights[i])
-#
-#     # Three point case is given by the fusion product
-#     if len(factor_list) == 1:
-#         dual_wt3 = liealg.get_dual_weight(factor_list[0])
-#         if dual_wt3 in fus_prod:
-#             return fus_prod[dual_wt3]
-#         else:
-#             return 0
-#
-#     # If more than three points, factor
-#     cdef int ret_val = 0
-#     cdef int mult
-#     for wt in fus_prod:
-#         mult = fus_prod[wt]
-#         if mult > 0:
-#             ret_val = ret_val + mult * _compute_CB_rank(liealg, factor_list + [wt], level)
-#
-#     return ret_val
 
 
 class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
@@ -924,7 +881,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
 
     def get_orbit_iter(self, wt):
-        return self._alt_TypeAOrbitIterator(self, wt)
+        return self._TypeAOrbitIterator(self, wt)
 
     def _convert_funds_to_epsilons(self, coords):
         if coords in self._fte_dict: return self._fte_dict[coords]
@@ -958,56 +915,6 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return ret_coords
 
     class _TypeAOrbitIterator(object):
-        '''
-        Iterator object that traverses the Weyl group orbit of a given weight
-
-        Attributes:
-            no public attributes
-        '''
-
-        def __init__(self, liealg, wt):
-            self._init_weight = liealg.reflect_to_chamber(wt)
-            ep_coords = liealg._convert_funds_to_epsilons(self._init_weight)
-            oms = _OrderedMultiSet(ep_coords)
-            self._oms_list = []
-            self._index_list = []
-            for i in ep_coords:
-                self._oms_list.append(oms)
-                self._index_list.append(0)
-                oms = oms.remove(0)
-            self.done = False
-            self.liealg = liealg
-
-        def __iter__(self):
-            return self
-
-        def next(self):
-            if self.done: raise StopIteration()
-
-            new_ep_coords = []
-            for i in range(len(self._oms_list)):
-                new_ep_coords.append(self._oms_list[i].get(self._index_list[i]))
-
-            # Increment indices
-            i = len(self._index_list) - 1
-            while i >= 0:
-                if self._index_list[i] < self._oms_list[i].num_unique_elements() - 1:
-                    break
-                i = i - 1
-            if i < 0:
-                self.done = True
-                return tuple(self.liealg._convert_epsilons_to_funds(new_ep_coords))
-
-            self._index_list[i] = self._index_list[i] + 1
-            self._oms_list[i + 1] = self._oms_list[i].remove(self._index_list[i])
-            for j in range(i + 1, len(self._index_list)):
-                if j + 1 < len(self._index_list):
-                    self._oms_list[j + 1] = self._oms_list[j].remove(0)
-                self._index_list[j] = 0
-
-            return tuple(self.liealg._convert_epsilons_to_funds(new_ep_coords))
-
-    class _alt_TypeAOrbitIterator(object):
         '''
         Optimized iterator object that traverses the Weyl group orbit of a given weight.
 
@@ -1091,41 +998,6 @@ class TypeALieAlgebra(SimpleLieAlgebra):
 
             return ret_val
 
-
-
-
-class _OrderedMultiSet(object):
-    '''
-    A simple immutable multiset structure.
-    '''
-
-    def __init__(self, initial_list):
-        self._multi_set = {}
-
-        for el in initial_list:
-            if el in self._multi_set:
-                self._multi_set[el] = self._multi_set[el] + 1
-            else:
-                self._multi_set[el] = 1
-        self._key_list = sorted(self._multi_set.keys())
-
-    def num_unique_elements(self):
-        return len(self._key_list)
-
-    def get(self, i):
-        return self._key_list[i]
-
-    def remove(self, ind):
-        ret_list = []
-        for el in self._key_list:
-            if el == self.get(ind):
-                for i in range(self._multi_set[el] - 1):
-                    ret_list.append(el)
-            else:
-                for i in range(self._multi_set[el]):
-                    ret_list.append(el)
-
-        return _OrderedMultiSet(ret_list)
 
 class _Root(tuple):
     """

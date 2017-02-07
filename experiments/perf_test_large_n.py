@@ -24,7 +24,7 @@ import cProfile, time
 #Original:52 seconds
 def experiment():
     rank = 5
-    level = 4
+    level = 3
     num_points = 10
 
     liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
@@ -36,7 +36,7 @@ def experiment():
         print(wt, cbb.getRank(), divisor)
 
 if __name__ == '__main__':
-    #t0 = time.clock()
-    #experiment()
-    #print(time.clock() -t0)
-    cProfile.run('experiment()', sort='cumtime')
+    t0 = time.clock()
+    experiment()
+    print(time.clock() -t0)
+    #cProfile.run('experiment()', sort='cumtime')

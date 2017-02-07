@@ -10,13 +10,6 @@ import fusion_prod.cbd as cbd
 class Test(unittest.TestCase):
     
     def testSL2OrbitIter(self):
-        liealg = cbd.TypeALieAlgebra(3)
-        wt = (1,0,2)
-        for wt2 in liealg.get_orbit_iter(wt):
-            ep_coords = liealg._convert_funds_to_epsilons(wt2)
-            norm_coords = [i - min(ep_coords) for i in ep_coords]
-            print(norm_coords)
-
         liealg = cbd.TypeALieAlgebra(1)
         wt = tuple([0])
         orbit_wt = wt
@@ -30,6 +23,28 @@ class Test(unittest.TestCase):
         orbit_dict = {orbit_wt1, orbit_wt2}
         for wt2 in liealg.get_orbit_iter(wt):
             self.assertTrue(wt2 in orbit_dict, "Orbit incorrect")
+
+        liealg = cbd.TypeALieAlgebra(3)
+        wt = (1, 0, 2)
+        A = set()
+        for wt2 in liealg.get_orbit_iter(wt):
+            ep_coords = liealg._convert_funds_to_epsilons(wt2)
+            norm_coords = [i - min(ep_coords) for i in ep_coords]
+            A.add(tuple(norm_coords))
+
+        self.assertTrue((3, 2, 2, 0) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((3, 2, 0, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((3, 0, 2, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((2, 3, 2, 0) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((2, 3, 0, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((2, 2, 3, 0) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((2, 2, 0, 3) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((2, 0, 3, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((2, 0, 2, 3) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((0, 3, 2, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((0, 2, 3, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        self.assertTrue((0, 2, 2, 3) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+
     
     def testSL2Tensor(self):
         liealg = cbd.TypeALieAlgebra(1)
