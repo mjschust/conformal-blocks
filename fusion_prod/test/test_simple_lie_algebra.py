@@ -48,17 +48,17 @@ class Test(unittest.TestCase):
     
     def testSL2Tensor(self):
         liealg = cbd.TypeALieAlgebra(1)
-        decomp = liealg.tensor([0], [0])
+        decomp = liealg.tensor((0,), (0,))
         dec_wt = tuple([0])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.tensor([0], [1])
+        decomp = liealg.tensor((0,), (1,))
         dec_wt = tuple([1])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.tensor([1], [1])
+        decomp = liealg.tensor((1,), (1,))
         dec_wt = tuple([2])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
@@ -66,7 +66,7 @@ class Test(unittest.TestCase):
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.tensor([2], [1])
+        decomp = liealg.tensor((2,), (1,))
         dec_wt = tuple([3])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
@@ -74,7 +74,7 @@ class Test(unittest.TestCase):
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.tensor([5], [2])
+        decomp = liealg.tensor((5,), (2,))
         dec_wt = tuple([7])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
@@ -87,24 +87,24 @@ class Test(unittest.TestCase):
 
     def testSL2Fusion(self):
         liealg = cbd.TypeALieAlgebra(1)
-        decomp = liealg.fusion([0], [0],1)
+        decomp = liealg.fusion((0,), (0,),1)
         dec_wt = tuple([0])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.fusion([0], [1], 1)
+        decomp = liealg.fusion((0,), (1,), 1)
         dec_wt = tuple([1])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.fusion([1], [1],1)
+        decomp = liealg.fusion((1,), (1,),1)
         dec_wt = tuple([2])
         self.assertFalse(dec_wt in decomp, "Tensor decomp incorrect")
         dec_wt = tuple([0])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.fusion([1], [1],2)
+        decomp = liealg.fusion((1,), (1,),2)
         dec_wt = tuple([2])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
@@ -112,7 +112,7 @@ class Test(unittest.TestCase):
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.fusion([5], [2],7)
+        decomp = liealg.fusion((5,), (2,),7)
         dec_wt = tuple([7])
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
@@ -123,7 +123,7 @@ class Test(unittest.TestCase):
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.fusion([5], [2],6)
+        decomp = liealg.fusion((5,), (2,),6)
         dec_wt = tuple([7])
         self.assertFalse(dec_wt in decomp, "Tensor decomp incorrect")
         dec_wt = tuple([5])
@@ -133,7 +133,7 @@ class Test(unittest.TestCase):
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-        decomp = liealg.fusion([5], [2],5)
+        decomp = liealg.fusion((5,), (2,),5)
         dec_wt = tuple([7])
         self.assertFalse(dec_wt in decomp, "Tensor decomp incorrect")
         dec_wt = tuple([5])
