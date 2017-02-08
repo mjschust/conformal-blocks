@@ -24,8 +24,8 @@ import cProfile, time
 #Original:52 seconds
 def experiment():
     rank = 5
-    level = 3
-    num_points = 9
+    level = 4
+    num_points = 10
 
     liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
     print("Weight", "Rank", "Divisor", "Cosine")

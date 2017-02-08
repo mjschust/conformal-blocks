@@ -22,7 +22,6 @@ def vec_cos(v1,v2):
 #Iterates through symmetric conformal blocks divisors of specified Lie rank, level,
 #and number of points, and compares them to a given divisor by computing the
 #cosine of the angle between them.
-#16.8 seconds
 def experiment():
     rank = 5
     level = 3
@@ -34,7 +33,7 @@ def experiment():
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, num_points, level)
         if cbb.getRank() == 0: continue
-        divisor = cbb.get_symmetrized_divisor()
+        divisor = cbb.get_norm_sym_divisor_ray()
         print(wt, cbb.getRank(), divisor, vec_cos(divisor, goal))
 
 if __name__ == '__main__':
