@@ -28,7 +28,7 @@ class ConformalBlocksBundle(object):
         self.level = level
         self._rank = -1
 
-    def getRank(self):
+    def get_rank(self):
         """
         Computes the rank of the conformal blocks bundle.  The algorithm uses factorization, then
         the fusion product to compute the 3-point ranks.
@@ -129,7 +129,7 @@ class ConformalBlocksBundle(object):
         weighted_rank = 0
         for wt in self.weights:
             weighted_rank += self.liealg.casimirScalar(wt)
-        weighted_rank = self.getRank() * weighted_rank / (n * (n - 1))
+        weighted_rank = self.get_rank() * weighted_rank / (n * (n - 1))
 
         point_indices = [i for i in range(0, n)]
         for i in range(2, n // 2 + 1):
@@ -150,7 +150,7 @@ class ConformalBlocksBundle(object):
                     mu = self.liealg.get_dual_weight(mu_star)
                     V1 = ConformalBlocksBundle(self.liealg, wt_list1 + [mu], self.level)
                     V2 = ConformalBlocksBundle(self.liealg, wt_list2 + [mu_star], self.level)
-                    sum += self.liealg.casimirScalar(mu) * V1.getRank() * V2.getRank()
+                    sum += self.liealg.casimirScalar(mu) * V1.get_rank() * V2.get_rank()
 
             sum = sum*math.factorial(i)*math.factorial(n-i)/math.factorial(n)
             coord = (coord - sum) / (2 * (self.level + self.liealg.dual_coxeter()))
@@ -239,7 +239,7 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
         n = len(self.weights)
         wt = self.weights[0]
         for i in range(2, n // 2 + 1):
-            coord = i * (n - i) * self.getRank() * self.liealg.casimirScalar(wt) / (n - 1)
+            coord = i * (n - i) * self.get_rank() * self.liealg.casimirScalar(wt) / (n - 1)
             sum_list = [0]
             self._weightedFactor(wt, wt, 1, i - 1, n - i, sum_list, {})
             coord = (coord - sum_list[0]) / (2 * (self.level + self.liealg.dual_coxeter()))
@@ -258,7 +258,7 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
                     wt_list = [wt for i in range(ic)]
                     wt_list.append(wt3)
                     cbb = ConformalBlocksBundle(self.liealg, wt_list, self.level)
-                    rank_dict[wt3] = cbb.getRank()
+                    rank_dict[wt3] = cbb.get_rank()
 
                 ret_val[0] += self.liealg.casimirScalar(self.liealg.get_dual_weight(wt3)) * mult * prod[wt3] * \
                               rank_dict[wt3]
@@ -555,7 +555,7 @@ class SimpleLieAlgebra(object):
         :return: A positive integer: the degree of the bundle.
         """
         cbb = ConformalBlocksBundle(self, [wt1, wt2, wt3, wt4], level)
-        ret_val = cbb.getRank() * (
+        ret_val = cbb.get_rank() * (
         self.casimirScalar(wt1) + self.casimirScalar(wt2) + self.casimirScalar(wt3) + self.casimirScalar(wt4))
 
         sum = 0
@@ -580,7 +580,7 @@ class SimpleLieAlgebra(object):
         ret_val -= sum
         ret_val = ret_val / (2 * (level + self.dual_coxeter()))
 
-        return int(round(ret_val))
+        return long(round(ret_val))
 
 
     def killing_form(self, wt1, wt2):

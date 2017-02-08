@@ -22,11 +22,11 @@ def experiment():
         weights = [random.choice(A_l) for i in range(num_points)]
         if sum([sum(liealg._convert_funds_to_epsilons(wt)) for wt in weights]) % (rank+1) != 0: continue
         cbb = cbd.ConformalBlocksBundle(liealg, weights, level)
-        if cbb.getRank() > 0:
+        if cbb.get_rank() > 0:
             divisor = cbb.get_symmetrized_divisor()
-            print(weights, cbb.getRank(), divisor)
+            print(weights, cbb.get_rank(), divisor)
         else:
-            print(weights, cbb.getRank(), 0)
+            print(weights, cbb.get_rank(), 0)
 
 
 if __name__ == '__main__':

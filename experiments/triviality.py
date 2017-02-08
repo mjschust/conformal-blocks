@@ -17,7 +17,7 @@ def experiment():
     print("Weight", "Rank", "Divisor")
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, 4, level)
-        if cbb.getRank() == 0: continue
+        if cbb.get_rank() == 0: continue
         #tot_weight = wt.fund_coords[0] + 2*wt.fund_coords[1] + 3*wt.fund_coords[2]
         #if tot_weight <= level: continue
         #tot_weight = 3*wt.fund_coords[0] + 2*wt.fund_coords[1] + wt.fund_coords[2]
@@ -25,7 +25,7 @@ def experiment():
         #if level >= tot_weight // (r+1): continue
         divisor = cbb.get_symmetrized_divisor()
         if divisor[0] == 0: continue
-        print(wt, cbb.getRank(), divisor)
+        print(wt, cbb.get_rank(), divisor)
 
 if __name__ == '__main__':
     #t0 = time.clock()

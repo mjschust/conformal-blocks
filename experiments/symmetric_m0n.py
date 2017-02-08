@@ -32,9 +32,9 @@ def experiment():
     print("Weight", "Rank", "Divisor", "Cosine")
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, num_points, level)
-        if cbb.getRank() == 0: continue
+        if cbb.get_rank() == 0: continue
         divisor = cbb.get_norm_sym_divisor_ray()
-        print(wt, cbb.getRank(), divisor, vec_cos(divisor, goal))
+        print(wt, cbb.get_rank(), divisor, vec_cos(divisor, goal))
 
 if __name__ == '__main__':
     t0 = time.clock()
