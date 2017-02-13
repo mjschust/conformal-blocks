@@ -52,7 +52,7 @@ class ConformalBlocksBundle(object):
         n = len(self.weights)
         weighted_rank = 0
         for wt in self.weights:
-            weighted_rank += self.liealg.casimirScalar(wt)
+            weighted_rank += self.liealg.casimir_scalar(wt)
         weighted_rank = self.get_rank() * weighted_rank / (n * (n - 1))
 
         point_indices = [i for i in range(0, n)]
@@ -72,7 +72,7 @@ class ConformalBlocksBundle(object):
                 prod = self.liealg.multi_fusion(wt_list1, self.level)
                 for mu_star in prod.keys():
                     mu = self.liealg.get_dual_weight(mu_star)
-                    sum += self.liealg.casimirScalar(mu) * self.liealg.get_rank(wt_list1 + [mu], self.level) * self.liealg.get_rank(wt_list2 + [mu_star], self.level)
+                    sum += self.liealg.casimir_scalar(mu) * self.liealg.get_rank(wt_list1 + [mu], self.level) * self.liealg.get_rank(wt_list2 + [mu_star], self.level)
 
             sum = sum*math.factorial(i)*math.factorial(n-i)/math.factorial(n)
             coord = (coord - sum) / (2 * (self.level + self.liealg.dual_coxeter()))
@@ -161,7 +161,7 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
         n = len(self.weights)
         wt = self.weights[0]
         for i in range(2, n // 2 + 1):
-            coord = i * (n - i) * self.get_rank() * self.liealg.casimirScalar(wt) / (n - 1)
+            coord = i * (n - i) * self.get_rank() * self.liealg.casimir_scalar(wt) / (n - 1)
             sum_list = [0]
             self._weightedFactor(wt, wt, 1, i - 1, n - i, sum_list, {})
             coord = (coord - sum_list[0]) / (2 * (self.level + self.liealg.dual_coxeter()))
@@ -182,8 +182,73 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
                     cbb = ConformalBlocksBundle(self.liealg, wt_list, self.level)
                     rank_dict[wt3] = cbb.get_rank()
 
-                ret_val[0] += self.liealg.casimirScalar(self.liealg.get_dual_weight(wt3)) * mult * prod[wt3] * \
+                ret_val[0] += self.liealg.casimir_scalar(self.liealg.get_dual_weight(wt3)) * mult * prod[wt3] * \
                               rank_dict[wt3]
+
+    def get_sym_chern_class(self):
+        #Currently only computes 2nd chern class
+        ret_val = {}
+        wt = self.weights[0]
+        n = len(self.weights)
+        liealg = self.liealg
+        ell = self.level
+
+        #Psi coord
+        ret_val[(2,)] = self.liealg.norm_casimir(wt, ell)**2 * self.get_rank()
+
+        #Mixed coords
+        for i in range(2, n // 2 + 1):
+            coord = 0
+            wt_list1 = [wt for j in range(i)]
+            wt_list2 = [wt for j in range(n-i)]
+            prod1 = liealg.multi_fusion(wt_list1, self.level)
+            prod2 = liealg.multi_fusion(wt_list2, self.level)
+
+            for mu_star in prod1:
+                mu = liealg.get_dual_weight(mu_star)
+                coord += liealg.norm_casimir(mu, ell) * prod1[mu_star] * prod2[mu]
+
+            coord = -2*liealg.norm_casimir(wt, ell) * coord
+            ret_val[(1,i)] = coord
+
+        #Self-intersection boundary coords
+        for i in range(2, n // 2 + 1):
+            coord = 0
+            wt_list1 = [wt for j in range(i)]
+            wt_list2 = [wt for j in range(n - i)]
+            prod1 = liealg.multi_fusion(wt_list1, self.level)
+            prod2 = liealg.multi_fusion(wt_list2, self.level)
+
+            for mu_star in prod1:
+                mu = liealg.get_dual_weight(mu_star)
+                coord += liealg.norm_casimir(mu, ell)**2 * prod1[mu_star] * prod2[mu]
+
+            ret_val[(0,i)] = coord
+
+        #Remaining boundary coords
+        for i in range(2, n // 2 + 1):
+            for j in range(i+1,  n // 2 + 1):
+                coord = 0
+                wt_list1 = [wt for k in range(i)]
+                wt_list2 = [wt for k in range(j)]
+                wt_list3 = [wt for k in range(n-j)]
+                prod1 = liealg.multi_fusion(wt_list1, self.level)
+                prod3 = liealg.multi_fusion(wt_list3, self.level)
+
+                for mu_star1 in prod1:
+                    prod2 = liealg.multi_fusion(wt_list2 +[mu_star1], self.level)
+                    for mu_star2 in prod2:
+                        mu1 = liealg.get_dual_weight(mu_star1)
+                        mu2 = liealg.get_dual_weight(mu_star2)
+                        coord += liealg.norm_casimir(mu1, ell) * liealg.norm_casimir(mu2, ell) * prod1[mu_star1] * \
+                            prod2[mu_star2] * prod3[mu2]
+
+                coord = 2 * coord
+                ret_val[(0,i,j)] = coord
+
+        return ret_val
+
+
 
 
 class SimpleLieAlgebra(object):
@@ -387,6 +452,9 @@ class SimpleLieAlgebra(object):
         ret_dict = {}
         rho = self.get_rho()
 
+        #Not sure if this should be necessary or not
+        if self.get_level(wt1) > ell or self.get_level(wt2) > ell: return ret_dict
+
         for wt in ten_decom.keys():
             if self.get_level(wt) == ell + 1: continue
 
@@ -529,7 +597,7 @@ class SimpleLieAlgebra(object):
         """
         cbb = ConformalBlocksBundle(self, [wt1, wt2, wt3, wt4], level)
         ret_val = cbb.get_rank() * (
-        self.casimirScalar(wt1) + self.casimirScalar(wt2) + self.casimirScalar(wt3) + self.casimirScalar(wt4))
+            self.casimir_scalar(wt1) + self.casimir_scalar(wt2) + self.casimir_scalar(wt3) + self.casimir_scalar(wt4))
 
         sum = 0
         prod1 = self.fusion(wt1, wt2, level)
@@ -537,19 +605,19 @@ class SimpleLieAlgebra(object):
         for mu in prod1.keys():
             mu_star = self.get_dual_weight(mu)
             if mu_star in prod2:
-                sum += self.casimirScalar(mu_star) * prod1[mu] * prod2[mu_star]
+                sum += self.casimir_scalar(mu_star) * prod1[mu] * prod2[mu_star]
         prod1 = self.fusion(wt1, wt3, level)
         prod2 = self.fusion(wt2, wt4, level)
         for mu in prod1.keys():
             mu_star = self.get_dual_weight(mu)
             if mu_star in prod2:
-                sum += self.casimirScalar(mu_star) * prod1[mu] * prod2[mu_star]
+                sum += self.casimir_scalar(mu_star) * prod1[mu] * prod2[mu_star]
         prod1 = self.fusion(wt1, wt4, level)
         prod2 = self.fusion(wt2, wt3, level)
         for mu in prod1.keys():
             mu_star = self.get_dual_weight(mu)
             if mu_star in prod2:
-                sum += self.casimirScalar(mu_star) * prod1[mu] * prod2[mu_star]
+                sum += self.casimir_scalar(mu_star) * prod1[mu] * prod2[mu_star]
         ret_val -= sum
         ret_val = ret_val / (2 * (level + self.dual_coxeter()))
 
@@ -575,7 +643,7 @@ class SimpleLieAlgebra(object):
         """
         return self.killing_form(wt, wt)
 
-    def casimirScalar(self, wt):
+    def casimir_scalar(self, wt):
         """
         Computes the Casimir scalar of a weight.
 
@@ -593,6 +661,16 @@ class SimpleLieAlgebra(object):
         :return: An integer: the dual coxeter number.
         """
         raise NotImplementedError
+
+    def norm_casimir(self, wt, level):
+        """
+        Computes a normalized Casimir scalar of a weight at the given level.
+
+        :param wt: A tuple of numbers: a weight.
+        :param level: A positive integer: the level.
+        :return: A number.
+        """
+        return self.casimir_scalar(wt)/(2*(level+self.dual_coxeter()))
 
     def is_dominant(self, wt):
         """

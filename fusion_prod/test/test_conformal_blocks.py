@@ -26,6 +26,10 @@ class Test(unittest.TestCase):
         cbb = cbd.ConformalBlocksBundle(liealg, [wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1], 2)
         #print(cbb.getRank())
 
+        liealg = cbd.TypeALieAlgebra(3)
+        cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1, 0, 2], 8, 1)
+        self.assertEqual(0, cbb.get_rank(), "Rank incorrect")
+
     def testSymmetricDivisors(self):
         liealg = cbd.TypeALieAlgebra(1)
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 4, 1)
@@ -127,6 +131,18 @@ class Test(unittest.TestCase):
         self.assertEqual(1, cbb.intersect_F_curve([[1],[2,3],[4],[5]]), "F-curve intersection incorrect")
         self.assertEqual(0, cbb.intersect_F_curve([[1, 2], [3], [4], [5]]), "F-curve intersection incorrect")
         self.assertEqual(3, cbb.intersect_F_curve([[1], [2], [3], [4,5]]), "F-curve intersection incorrect")
+
+    def testChernClass(self):
+        liealg = cbd.TypeALieAlgebra(1)
+        cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 6, 1)
+        self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
+        print(cbb.get_sym_chern_class())
+
+        liealg = cbd.TypeALieAlgebra(3)
+        cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1,0,1], 6, 2)
+        print(cbb.get_rank())
+        print(cbb.get_symmetrized_divisor())
+        print(cbb.get_sym_chern_class())
         
 
 if __name__ == "__main__":
