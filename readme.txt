@@ -7,15 +7,16 @@ correct.  You should check all computations using Swinarski's program as a refer
 before accepting them as true
 *This software will have bugs, and I cannot guarantee they will not harm your computer
 
-Setup
------
-The program has been converted to a Cython module and needs to be compiled before use.  Follow these
+Optional Cython Setup
+---------------------
+The program can be converted to a Cython module that needs to be compiled before use.  Follow these
 steps to setup the program.  You will need Sage installed on your computer.
 
-1.  Extract the contents of the zip archive anywhere on your computer.  You may rename the
+1.  Rename the file "../conformal-blocks/fusion_prod/cbd.py" to "cbd.pyx".
+2.  Extract the contents of the zip archive anywhere on your computer.  You may rename the
     extracted folder, but we will assume the folder is named "conformal-blocks-master".
-2.  Open a terminal and change directory to the "conformal-blocks-master" folder.
-3.  Execute the following command:
+3.  Open a terminal and change directory to the "conformal-blocks-master" folder.
+4.  Execute the following command:
 
 $ sage setup.py build_ext --inplace
 
@@ -27,10 +28,6 @@ The above may not work depending on your environment.  You need to have the gcc 
 on your system for Sage to be able to compile Cython code.  On Linux just install it in the standard way
 for your distribution.  On OS X, the easist way is to install Xcode, making sure to install the command-line
 tools.
-
-If you can't find a way to install gcc, for now an easy work-around is to change the name of the
-file "cbd.pyx" in the folder ".../conformal-blocks-master/fusion_prod" to "cbd.py".  Sage will then run
-the code as slower pure Python code.
 
 Using the program in Sage
 -------------------------
