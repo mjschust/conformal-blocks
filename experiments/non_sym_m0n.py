@@ -11,8 +11,8 @@ def experiment():
     :return: Null
     """
     rank = 5
-    level = 3
-    num_points = 10
+    level = 2
+    num_points = 5
     tries = 100
 
     liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
@@ -24,9 +24,10 @@ def experiment():
         cbb = cbd.ConformalBlocksBundle(liealg, weights, level)
         if cbb.get_rank() > 0:
             divisor = cbb.get_symmetrized_divisor()
-            print(weights, cbb.get_rank(), divisor)
+            chern_number = liealg.get_chern_number(*(weights + [level]))
+            print(weights, cbb.get_rank(), divisor, chern_number)
         else:
-            print(weights, cbb.get_rank(), 0)
+            print(weights, cbb.get_rank(), 0, 0)
 
 
 if __name__ == '__main__':

@@ -24,8 +24,8 @@ def vec_cos(v1,v2):
 #cosine of the angle between them.
 def experiment():
     rank = 5
-    level = 3
-    num_points = 9
+    level = 2
+    num_points = 5
     goal = [1, 1, 2]
 
     liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)

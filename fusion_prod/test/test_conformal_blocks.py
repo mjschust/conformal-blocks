@@ -138,6 +138,10 @@ class Test(unittest.TestCase):
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
         print(cbb.get_sym_chern_class())
 
+        weights = [(1,),(1,),(1,),(1,),(0,)]
+        self.assertEqual(1, liealg.get_rank(weights, 1))
+        self.assertEqual(0, liealg.get_chern_root2((1,), (1,), (1,), (1,), (0,), 1))
+
         liealg = cbd.TypeALieAlgebra(3)
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1,0,1], 6, 2)
         print(cbb.get_rank())
