@@ -134,6 +134,42 @@ class ConformalBlocksBundle(object):
 
         return ret_val
 
+    def intersect_F_surface(self, partition):
+        """
+        Computes the intersection of the divisor associated to this conformal blocks bundle with
+        the given F-curve.
+
+        :param partition: A list of 4 lists of integers partitioning the set {1, ..., # points}: the
+            F-curve to be intersected.
+        :return: An integer: the intersection number.
+        """
+        ret_val = 0
+        wt_list1 = [self.weights[point - 1] for point in partition[0]]
+        wt_list2 = [self.weights[point - 1] for point in partition[1]]
+        wt_list3 = [self.weights[point - 1] for point in partition[2]]
+        wt_list4 = [self.weights[point - 1] for point in partition[3]]
+        wt_list5 = [self.weights[point - 1] for point in partition[4]]
+
+        prod1 = self.liealg.multi_fusion(wt_list1, self.level)
+        prod2 = self.liealg.multi_fusion(wt_list2, self.level)
+        prod3 = self.liealg.multi_fusion(wt_list3, self.level)
+        prod4 = self.liealg.multi_fusion(wt_list4, self.level)
+        prod5 = self.liealg.multi_fusion(wt_list5, self.level)
+
+        for wt1 in prod1.keys():
+            if prod1[wt1] == 0: continue
+            for wt2 in prod2.keys():
+                if prod2[wt2] == 0: continue
+                for wt3 in prod3.keys():
+                    if prod3[wt3] == 0: continue
+                    for wt4 in prod4.keys():
+                        if prod4[wt4] == 0: continue
+                        for wt5 in prod5.keys():
+                            ret_val += self.liealg.chern_number(wt1, wt2, wt3, wt4, wt5, self.level) * prod1[wt1] * \
+                                       prod2[wt2] * prod3[wt3] * prod4[wt4] * prod5[wt5]
+
+        return ret_val
+
 
 class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
     """
@@ -795,7 +831,7 @@ class SimpleLieAlgebra(object):
 
         return ret_val
 
-    def get_chern_number(self, wt1, wt2, wt3, wt4, wt5, level):
+    def chern_number(self, wt1, wt2, wt3, wt4, wt5, level):
         return 1/2 * (self.get_chern_root1(wt1, wt2, wt3, wt4, wt5, level) - \
                       self.get_chern_root2(wt1, wt2, wt3, wt4, wt5, level))
 
