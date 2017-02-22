@@ -136,12 +136,12 @@ class ConformalBlocksBundle(object):
 
     def intersect_F_surface(self, partition):
         """
-        Computes the intersection of the divisor associated to this conformal blocks bundle with
-        the given F-curve.
+        Computes the intersection of the second Chern class associated to this conformal blocks bundle with
+        the given F-surface
 
-        :param partition: A list of 4 lists of integers partitioning the set {1, ..., # points}: the
-            F-curve to be intersected.
-        :return: An integer: the intersection number.
+        :param partition: A list of 5 lists of integers partitioning the set {1, ..., # points}: the
+            F-surface to be intersected.
+        :return: A rational number: the intersection number.
         """
         ret_val = 0
         wt_list1 = [self.weights[point - 1] for point in partition[0]]

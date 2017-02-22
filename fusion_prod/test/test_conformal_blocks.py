@@ -134,19 +134,26 @@ class Test(unittest.TestCase):
 
     def testChernClass(self):
         liealg = cbd.TypeALieAlgebra(1)
-        cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 6, 1)
-        self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
-        #print(cbb.get_sym_chern_class())
-
-        weights = [(1,),(1,),(1,),(1,),(0,)]
+        weights = [(1,), (1,), (1,), (1,), (0,)]
         self.assertEqual(1, liealg.get_rank(weights, 1))
         self.assertEqual(0, liealg.chern_number((1,), (1,), (1,), (1,), (0,), 1))
 
-        liealg = cbd.TypeALieAlgebra(3)
-        cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1,0,1], 6, 2)
-        print(cbb.get_rank())
-        print(cbb.get_symmetrized_divisor())
-        print(cbb.get_sym_chern_class())
+        cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 6, 1)
+        f_surface = [[1,2], [3], [4], [5], [6]]
+        self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
+        self.assertEqual(0, cbb.intersect_F_surface(f_surface), "Second chern class incorrect")
+        #print(cbb.get_sym_chern_class())
+
+        liealg = cbd.TypeALieAlgebra(5)
+        weights = [(2, 0, 0, 0, 0), (0, 0, 2, 0, 0), (2, 0, 0, 0, 0), (0, 0, 0, 1, 1), (1, 0, 0, 0, 0), \
+                   (0, 0, 0, 0, 1), (1, 0, 0, 1, 0)]
+        f_surface1 = [[1, 2], [3, 4], [5], [6], [7]]
+        f_surface2 = [[1, 2, 3], [4], [5], [6], [7]]
+        cbb = cbd.ConformalBlocksBundle(liealg, weights, 2)
+        self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
+        self.assertEqual(0, round(cbb.intersect_F_surface(f_surface1)), "Second chern class incorrect")
+        self.assertEqual(0, round(cbb.intersect_F_surface(f_surface2)), "Second chern class incorrect")
+
         
 
 if __name__ == "__main__":
