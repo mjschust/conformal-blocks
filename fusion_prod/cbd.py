@@ -662,7 +662,7 @@ class SimpleLieAlgebra(object):
 
     def get_chern_root1(self, wt1, wt2, wt3, wt4, wt5, level):
         """
-        Computes the c_2 chern number of a conformal blocks bundle on \bar{M}_0,5
+        Computes the c_1^2 chern number of a conformal blocks bundle on \bar{M}_0,5
         :param wt1:
         :param wt2:
         :param wt3:
@@ -684,7 +684,7 @@ class SimpleLieAlgebra(object):
                 ret_val += 4 * self.norm_casimir(weights[i], level) * self.norm_casimir(weights[j], level) * rank**2
 
         #Mixed coords
-        for i in range(5):
+        for i in range(1, 5):
             for j in range(i+1, 5):
                 for k in range(5):
                     if k == i or k == j:
@@ -703,7 +703,7 @@ class SimpleLieAlgebra(object):
                     ret_val += -2 * self.norm_casimir(weights[k], level) * rank * factor_coeff
 
         #Self-intersection boundary coords
-        for i in range(5):
+        for i in range(1, 5):
             for j in range(i+1, 5):
                 # Compute factor coefficient
                 factor_coeff = 0
@@ -718,32 +718,31 @@ class SimpleLieAlgebra(object):
                 ret_val -= factor_coeff**2
 
         #Remaining boundary coords
-        for i in range(5):
+        for i in range(1, 5):
             for j in range(i+1, 5):
-                for k in range(5):
-                    if k == i or k == j: continue
-                    for l in range(k+1, 5):
-                        if l == i or l == j: continue
+                k = 0
+                for l in range(1, 5):
+                    if l == i or l == j: continue
 
-                        factor_coeff1 = 0
-                        wt_list1 = [weights[i], weights[j]]
-                        wt_list2 = [weights[ind] for ind in range(5) if ind != i and ind != j]
-                        prod1 = self.multi_fusion(wt_list1, level)
-                        prod2 = self.multi_fusion(wt_list2, level)
-                        for mu_star in prod1:
-                            mu = self.get_dual_weight(mu_star)
-                            factor_coeff1 += self.norm_casimir(mu, level) * prod1[mu_star] * prod2[mu]
+                    factor_coeff1 = 0
+                    wt_list1 = [weights[i], weights[j]]
+                    wt_list2 = [weights[ind] for ind in range(5) if ind != i and ind != j]
+                    prod1 = self.multi_fusion(wt_list1, level)
+                    prod2 = self.multi_fusion(wt_list2, level)
+                    for mu_star in prod1:
+                        mu = self.get_dual_weight(mu_star)
+                        factor_coeff1 += self.norm_casimir(mu, level) * prod1[mu_star] * prod2[mu]
 
-                        factor_coeff2 = 0
-                        wt_list1 = [weights[k], weights[l]]
-                        wt_list2 = [weights[ind] for ind in range(5) if ind != k and ind != l]
-                        prod1 = self.multi_fusion(wt_list1, level)
-                        prod2 = self.multi_fusion(wt_list2, level)
-                        for mu_star in prod1:
-                            mu = self.get_dual_weight(mu_star)
-                            factor_coeff2 += self.norm_casimir(mu, level) * prod1[mu_star] * prod2[mu]
+                    factor_coeff2 = 0
+                    wt_list1 = [weights[k], weights[l]]
+                    wt_list2 = [weights[ind] for ind in range(5) if ind != k and ind != l]
+                    prod1 = self.multi_fusion(wt_list1, level)
+                    prod2 = self.multi_fusion(wt_list2, level)
+                    for mu_star in prod1:
+                        mu = self.get_dual_weight(mu_star)
+                        factor_coeff2 += self.norm_casimir(mu, level) * prod1[mu_star] * prod2[mu]
 
-                        ret_val += 2 * factor_coeff1*factor_coeff2
+                    ret_val += 2 * factor_coeff1*factor_coeff2
 
         return ret_val
 
@@ -770,8 +769,10 @@ class SimpleLieAlgebra(object):
             for j in range(i+1, 5):
                 ret_val += 4 * self.norm_casimir(weights[i], level) * self.norm_casimir(weights[j], level) * rank
 
+        print(ret_val)
+
         #Mixed coords
-        for i in range(5):
+        for i in range(1, 5):
             for j in range(i+1, 5):
                 for k in range(5):
                     if k == i or k == j:
@@ -789,8 +790,10 @@ class SimpleLieAlgebra(object):
 
                     ret_val += -2 * self.norm_casimir(weights[k], level) * factor_coeff
 
+        print(ret_val)
+
         #Self-intersection boundary coords
-        for i in range(5):
+        for i in range(1, 5):
             for j in range(i+1, 5):
                 # Compute factor coefficient
                 factor_coeff = 0
@@ -804,30 +807,36 @@ class SimpleLieAlgebra(object):
 
                 ret_val += -factor_coeff
 
+        print(ret_val)
+
         #Remaining boundary coords
-        for i in range(5):
+        for i in range(1, 5):
             for j in range(i+1, 5):
-                for k in range(5):
-                    if k == i or k == j: continue
-                    for l in range(k+1, 5):
-                        if l == i or l == j: continue
+                k = 0
+                for l in range(1, 5):
+                    if l == i or l == j: continue
 
-                        factor_coeff = 0
-                        wt_list1 = [weights[i], weights[j]]
-                        wt_list2 = [weights[ind] for ind in range(5) if ind != i and ind != j and ind != k and ind != l]
-                        wt_list3 = [weights[k], weights[l]]
-                        prod1 = self.multi_fusion(wt_list1, level)
-                        prod3 = self.multi_fusion(wt_list3, level)
+                    print(i,j,k,l)
+                    factor_coeff = 0
+                    wt_list1 = [weights[i], weights[j]]
+                    wt_list2 = [weights[ind] for ind in range(5) if ind != i and ind != j and ind != k and ind != l]
+                    wt_list3 = [weights[k], weights[l]]
+                    prod1 = self.multi_fusion(wt_list1, level)
+                    prod3 = self.multi_fusion(wt_list3, level)
 
-                        for mu_star1 in prod1:
-                            mu1 = self.get_dual_weight(mu_star1)
-                            prod2 = self.multi_fusion(wt_list2 +[mu_star1], level)
-                            for mu_star2 in prod2:
-                                mu2 = self.get_dual_weight(mu_star2)
-                                factor_coeff += self.norm_casimir(mu1, level) * self.norm_casimir(mu2, level) * \
-                                    prod1[mu_star1] * prod2[mu_star2] * prod3[mu2]
+                    for mu_star1 in prod1:
+                        mu1 = self.get_dual_weight(mu_star1)
+                        prod2 = self.multi_fusion(wt_list2 +[mu_star1], level)
+                        for mu_star2 in prod2:
+                            mu2 = self.get_dual_weight(mu_star2)
+                            factor_coeff += self.norm_casimir(mu1, level) * self.norm_casimir(mu2, level) * \
+                                            prod1[mu_star1] * prod2[mu_star2] * prod3[mu2]
 
-                        ret_val += 2 * factor_coeff
+                    print(factor_coeff)
+                    ret_val += 2 * factor_coeff
+                    print(ret_val)
+
+        print(ret_val)
 
         return ret_val
 

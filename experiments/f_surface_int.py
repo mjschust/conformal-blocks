@@ -6,12 +6,12 @@ def experiment():
     Computes the rank and divisor of conformal block bundles with random weights.
     :return: Null
     """
-    rank = 5
+    rank = 1
     level = 2
-    num_points = 7
-    f_surface1 = [[1, 2], [3, 4], [5], [6], [7]]
-    f_surface2 = [[1, 2, 3], [4], [5], [6], [7]]
-    tries = 500
+    num_points = 5
+    f_surface1 = [[1], [2], [3], [4], [5]]
+    f_surface2 = f_surface1
+    tries = 100
 
     liealg = cbd.TypeALieAlgebra(rank)
     A_l = liealg.get_weights(level)
@@ -24,7 +24,7 @@ def experiment():
             divisor = cbb.get_symmetrized_divisor()
             int_num1 = cbb.intersect_F_surface(f_surface1)
             int_num2 = cbb.intersect_F_surface(f_surface2)
-            print(weights, cbb.get_rank(), divisor, int_num1, int_num2)
+            print(weights, cbb.get_rank(), divisor, int_num1, int_num2, liealg.chern_number(*(weights + [level])))
 
 if __name__ == '__main__':
     t0 = time.clock()

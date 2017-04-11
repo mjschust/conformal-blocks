@@ -134,9 +134,12 @@ class Test(unittest.TestCase):
 
     def testChernClass(self):
         liealg = cbd.TypeALieAlgebra(1)
-        weights = [(1,), (1,), (1,), (1,), (0,)]
+        weights = [(0,), (1,), (1,), (1,), (1,)]
         self.assertEqual(1, liealg.get_rank(weights, 1))
-        self.assertEqual(0, liealg.chern_number((1,), (1,), (1,), (1,), (0,), 1))
+        #self.assertEqual(0, liealg.chern_number((1,), (1,), (1,), (1,), (0,), 1))
+        cbb = cbd.ConformalBlocksBundle(liealg, weights, 2)
+        print(cbb.get_norm_sym_divisor_ray(), liealg.get_chern_root1((0,), (1,), (1,), (1,), (1,), 2))
+        self.assertEqual(0, liealg.chern_number((0,), (1,), (1,), (1,), (1,), 2))
 
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 6, 1)
         f_surface = [[1,2], [3], [4], [5], [6]]
@@ -153,6 +156,7 @@ class Test(unittest.TestCase):
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
         self.assertEqual(0, round(cbb.intersect_F_surface(f_surface1)), "Second chern class incorrect")
         self.assertEqual(0, round(cbb.intersect_F_surface(f_surface2)), "Second chern class incorrect")
+
 
         
 
