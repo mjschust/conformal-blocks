@@ -972,6 +972,243 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             return ret_val
 
 
+class TypeCLieAlgebra(SimpleLieAlgebra):
+    """
+    A type C Lie algebra.
+    """
+
+    def killing_form(self, wt1, wt2):
+        ret_val = 0
+        ep_coords1 = self._convert_funds_to_epsilons(wt1)
+        ep_coords2 = self._convert_funds_to_epsilons(wt2)
+
+        for i in range(self.rank + 1):
+            ret_val = ret_val + ep_coords1[i] * ep_coords2[i]
+
+        return ret_val/2
+
+    def dual_coxeter(self):
+        return self.rank + 1
+
+    def get_level(self, wt):
+        return sum(wt)
+
+    def get_dual_weight(self, wt):
+        return tuple(wt)
+
+    def get_positive_roots(self):
+        if len(self._pos_roots) > 0: return self._pos_roots
+
+        ret_list = []
+        coords = []
+        for i in range(self.rank):
+            coords.append(0)
+
+        for i in range(len(coords)):
+            for j in range(i, len(coords)):
+                coords[j] = 1
+                ret_list.append(_Root(self, list(coords)))
+
+            for j in range(i, len(coords)):
+                coords[j] = 0
+
+        coords[-1] = 1
+        for i in range(len(coords)-2, -1, -1):
+            coords[i] = 2
+            for j in range(i-1, -1, -1):
+                coords[i] = 1
+                ret_list.append(_Root(self, list(coords)))
+
+            for j in range(i-1, -1, -1):
+                coords[i] = 0
+
+        self._pos_roots = ret_list
+        return ret_list
+
+    def reflect_to_chamber(self, wt):
+        #First reflect by making epsilon coords positive
+        ret_coords = self._convert_funds_to_epsilons(wt)
+
+        ret_coords = [abs(x) for x in ret_coords]
+
+        #Sort to finish reflection into chamber
+        ret_coords = self._insertsort(self._convert_funds_to_epsilons(wt))
+
+        #Return weight in terms of fundamental weights
+        return tuple(self._convert_epsilons_to_funds(ret_coords))
+
+    def _insertsort(self, coords):
+        ret_list = list(coords)
+
+        for i in range(1, len(ret_list)):
+            j = i
+            while j > 0 and ret_list[j - 1] < ret_list[j]:
+                ret_list[j - 1], ret_list[j] = ret_list[j], ret_list[j - 1]
+                j = j - 1
+
+        return ret_list
+
+    def reflect_to_chamber_with_parity(self, wt):
+        #First reflect by aking epsilon coords positive
+        ret_coords = self._convert_funds_to_epsilons(wt)
+        parity = 1
+        for i in len(ret_coords):
+            if ret_coords[i] < 0:
+                ret_coords[i] = -ret_coords[i]
+                parity *= -1
+
+        #Then sort to finish reflection
+        ret_coords, sort_parity = self._insertsort_parity(self._convert_funds_to_epsilons(wt))
+        parity *= sort_parity
+
+        return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
+
+    def _insertsort_parity(self, coords):
+        ret_list = list(coords)
+
+        parity = 1
+        for i in range(1, len(ret_list)):
+            j = i
+            while j > 0 and ret_list[j - 1] < ret_list[j]:
+                ret_list[j - 1], ret_list[j] = ret_list[j], ret_list[j - 1]
+                parity = parity * -1
+                j = j - 1
+
+        return ret_list, parity
+
+    def reflect_to_alcove_with_parity(self, wt, ell):
+        ret_coords, parity = self._insertsort_parity(self._convert_funds_to_epsilons(wt))
+
+        while (ret_coords[0] > ell):
+            #wt := wt + (ell-level(wt))*theta
+            ret_coords[0] = 2*ell-ret_coords[0]
+
+            #Return to chamber
+            ret_coords, fin_parity = self._insertsort_parity(ret_coords)
+            parity = parity * -1 * fin_parity
+
+        return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
+
+    def get_orbit_iter(self, wt):
+        raise NotImplementedError
+        return self._TypeAOrbitIterator(self, wt)
+
+    def _convert_funds_to_epsilons(self, coords):
+        if coords in self._fte_dict: return self._fte_dict[coords]
+
+        ret_coords = []
+        part = 0
+        for i in reversed(range(len(coords))):
+            part += coords[i]
+            ret_coords.insert(0, part)
+
+        self._fte_dict[coords] = ret_coords
+        return ret_coords
+
+    def _convert_epsilons_to_funds(self, coords):
+        ret_coords = []
+        for i in range(len(coords) - 1):
+            ret_coords.append(coords[i] - coords[i + 1])
+        ret_coords.append(coords[-1])
+
+        return ret_coords
+
+    def _convert_roots_to_funds(self, coords):
+        if len(coords) == 1: return [2 * coords[0]]
+
+        ret_coords = []
+        ret_coords.append(2 * coords[0] - coords[1])
+        for i in range(1, len(coords) - 1):
+            ret_coords.append(2 * coords[i] - coords[i + 1] - coords[i - 1])
+
+        ret_coords.append(2 * coords[-1] - 2 * coords[-2])
+        return ret_coords
+
+    class _TypeCOrbitIterator(object):
+        '''
+        Optimized iterator object that traverses the Weyl group orbit of a given weight.
+
+        Attributes:
+            no public attributes
+        '''
+        def __init__(self, liealg, wt):
+            ep_coords = liealg._convert_funds_to_epsilons(liealg.reflect_to_chamber(wt))
+
+            #Construct list of items and multiplicities
+            self._item_list = [ep_coords[0]]
+            cur_item = ep_coords[0]
+            rem_list = [0]
+            for item in ep_coords:
+                if item < cur_item:
+                    self._item_list.append(item)
+                    rem_list.append(1)
+                    cur_item = item
+                else:
+                    rem_list[-1] += 1
+
+            #Contruct matrix of remaining items, and initial index list
+            index_list = []
+            rem_mat = [list(rem_list)]
+            for i in range(len(ep_coords)):
+                j = 0
+                while rem_mat[i][j] == 0:
+                    j += 1
+                index_list.append(j)
+                rem_mat.append(list(rem_mat[i]))
+                rem_mat[i+1][j] -= 1
+
+            self._index_list = index_list
+            self._rem_mat = rem_mat
+            self.done = False
+            self.liealg = liealg
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            if self.done: raise StopIteration()
+            r = len(self._index_list)
+            num_items = len(self._item_list)
+
+            #Construct new weight
+            ep_coords = []
+            for index in self._index_list:
+                ep_coords.append(self._item_list[index])
+            ret_val = tuple(self.liealg._convert_epsilons_to_funds(ep_coords))
+
+            #Find index to increment
+            i = r-2
+            j = 0
+            while i >= 0:
+                j = self._index_list[i] + 1
+                while j < num_items:
+                    if self._rem_mat[i][j] > 0: break
+                    j += 1
+                if j < num_items: break
+                i -= 1
+
+            #If we're finished, return the last weight
+            if i < 0:
+                self.done = True
+                return ret_val
+
+            #Increment indices
+            self._index_list[i] = j
+            self._rem_mat[i+1] = list(self._rem_mat[i])
+            self._rem_mat[i+1][j] -= 1
+            i += 1
+            while i < r:
+                j = 0
+                while self._rem_mat[i][j] == 0:
+                    j += 1
+                self._index_list[i] = j
+                self._rem_mat[i + 1] = list(self._rem_mat[i])
+                self._rem_mat[i + 1][j] -= 1
+                i += 1
+
+            return ret_val
+
+
 class _Root(tuple):
     """
     This class represents an element of the root lattice of the given simple Lie algebra.
