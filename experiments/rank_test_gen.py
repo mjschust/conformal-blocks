@@ -10,8 +10,8 @@ def experiment():
     """
     rank = 2
     level = 3
-    num_points = 10
-    tries = 100
+    num_points = 6
+    tries = 10
 
     liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
     A_l = liealg.get_weights(level)
@@ -25,7 +25,10 @@ def experiment():
         cbb = cbd.ConformalBlocksBundle(liealg, weights, level)
         wt_str = "{"
         for wt in weights:
-            wt_str += "{" + str(wt)[1:-1] + "}, "
+            if len(wt) == 1:
+                wt_str += "{" + str(wt)[1] + "}, "
+            else:
+                wt_str += "{" + str(wt)[1:-1] + "}, "
         wt_str = wt_str[:-2] + "}"
         m2file.write("V = conformalBlockVectorBundle(sl_" + str(rank+1) + ", " + str(level)  + ", " + wt_str + ", 0);\n")
         m2file.write("if " + str(cbb.get_rank()) + " != conformalBlockRank(V) then error(\"Bundle " + "(sl_" + str(rank+1) + ", " + str(level)  + ", " + wt_str + ") incorrect rank\");\n")
