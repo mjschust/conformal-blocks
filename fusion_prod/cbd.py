@@ -806,7 +806,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         for i in range(len(ret_coords)):
             ret_coords[i] = ret_coords[i] - ret_coords[-1]
 
-        return tuple(self._convert_epsilons_to_funds(ret_coords))
+        return self._convert_epsilons_to_funds(ret_coords)
 
     def _insertsort(self, coords):
         ret_list = list(coords)
@@ -825,7 +825,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         for i in range(len(ret_coords)):
             ret_coords[i] = ret_coords[i] - ret_coords[-1]
 
-        return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
+        return self._convert_epsilons_to_funds(ret_coords), parity
 
     def _insertsort_parity(self, coords):
         ret_list = list(coords)
@@ -851,7 +851,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             ret_coords = [x - ret_coords[-1] for x in ret_coords]
             parity = parity * -1 * fin_parity
 
-        return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
+        return self._convert_epsilons_to_funds(ret_coords), parity
 
     def get_orbit_iter(self, wt):
         return self._TypeAOrbitIterator(self, wt)
@@ -874,7 +874,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         for i in range(len(coords) - 1):
             ret_coords.append(coords[i] - coords[i + 1])
 
-        return ret_coords
+        return tuple(ret_coords)
 
     def _convert_roots_to_funds(self, coords):
         if len(coords) == 1: return [2 * coords[0]]
@@ -937,7 +937,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             ep_coords = []
             for index in self._index_list:
                 ep_coords.append(self._item_list[index])
-            ret_val = tuple(self.liealg._convert_epsilons_to_funds(ep_coords))
+            ret_val = self.liealg._convert_epsilons_to_funds(ep_coords)
 
             #Find index to increment
             i = r-2
@@ -982,7 +982,7 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
         ep_coords1 = self._convert_funds_to_epsilons(wt1)
         ep_coords2 = self._convert_funds_to_epsilons(wt2)
 
-        for i in range(self.rank + 1):
+        for i in range(self.rank):
             ret_val = ret_val + ep_coords1[i] * ep_coords2[i]
 
         return ret_val/2
@@ -1015,12 +1015,13 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
         coords[-1] = 1
         for i in range(len(coords)-2, -1, -1):
             coords[i] = 2
+            ret_list.append(_Root(self, list(coords)))
             for j in range(i-1, -1, -1):
-                coords[i] = 1
+                coords[j] = 1
                 ret_list.append(_Root(self, list(coords)))
 
             for j in range(i-1, -1, -1):
-                coords[i] = 0
+                coords[j] = 0
 
         self._pos_roots = ret_list
         return ret_list
@@ -1032,10 +1033,10 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
         ret_coords = [abs(x) for x in ret_coords]
 
         #Sort to finish reflection into chamber
-        ret_coords = self._insertsort(self._convert_funds_to_epsilons(wt))
+        ret_coords = self._insertsort(ret_coords)
 
         #Return weight in terms of fundamental weights
-        return tuple(self._convert_epsilons_to_funds(ret_coords))
+        return self._convert_epsilons_to_funds(ret_coords)
 
     def _insertsort(self, coords):
         ret_list = list(coords)
@@ -1049,19 +1050,19 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
         return ret_list
 
     def reflect_to_chamber_with_parity(self, wt):
-        #First reflect by aking epsilon coords positive
+        #First reflect by making epsilon coords positive
         ret_coords = self._convert_funds_to_epsilons(wt)
         parity = 1
-        for i in len(ret_coords):
+        for i in range(len(ret_coords)):
             if ret_coords[i] < 0:
                 ret_coords[i] = -ret_coords[i]
                 parity *= -1
 
         #Then sort to finish reflection
-        ret_coords, sort_parity = self._insertsort_parity(self._convert_funds_to_epsilons(wt))
+        ret_coords, sort_parity = self._insertsort_parity(ret_coords)
         parity *= sort_parity
 
-        return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
+        return self._convert_epsilons_to_funds(ret_coords), parity
 
     def _insertsort_parity(self, coords):
         ret_list = list(coords)
@@ -1084,14 +1085,21 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
             ret_coords[0] = 2*ell-ret_coords[0]
 
             #Return to chamber
-            ret_coords, fin_parity = self._insertsort_parity(ret_coords)
-            parity = parity * -1 * fin_parity
+            fin_parity = -1
+            for i in range(len(ret_coords)):
+                if ret_coords[i] < 0:
+                    ret_coords[i] = -ret_coords[i]
+                    fin_parity *= -1
 
-        return tuple(self._convert_epsilons_to_funds(ret_coords)), parity
+            ret_coords, sort_parity = self._insertsort_parity(ret_coords)
+            fin_parity *= sort_parity
+
+            parity *= fin_parity
+
+        return self._convert_epsilons_to_funds(ret_coords), parity
 
     def get_orbit_iter(self, wt):
-        raise NotImplementedError
-        return self._TypeAOrbitIterator(self, wt)
+        return self._TypeCOrbitIterator(self, wt)
 
     def _convert_funds_to_epsilons(self, coords):
         if coords in self._fte_dict: return self._fte_dict[coords]
@@ -1111,17 +1119,21 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
             ret_coords.append(coords[i] - coords[i + 1])
         ret_coords.append(coords[-1])
 
-        return ret_coords
+        return tuple(ret_coords)
 
     def _convert_roots_to_funds(self, coords):
-        if len(coords) == 1: return [2 * coords[0]]
+        if len(coords) == 1:
+            return [2 * coords[0]]
+        elif len(coords) == 2:
+            return [2 * coords[0] - 2 * coords[1], -coords[0] + 2 * coords[1]]
 
         ret_coords = []
         ret_coords.append(2 * coords[0] - coords[1])
-        for i in range(1, len(coords) - 1):
+        for i in range(1, len(coords) - 2):
             ret_coords.append(2 * coords[i] - coords[i + 1] - coords[i - 1])
 
-        ret_coords.append(2 * coords[-1] - 2 * coords[-2])
+        ret_coords.append(2 * coords[-2] - 2 * coords[-1] - coords[-3])
+        ret_coords.append(2 * coords[-1] - coords[-2])
         return ret_coords
 
     class _TypeCOrbitIterator(object):
@@ -1159,25 +1171,47 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
 
             self._index_list = index_list
             self._rem_mat = rem_mat
-            self.done = False
+            self.perms_done = False
             self.liealg = liealg
+
+            # Get first permutation, and construct index iterator, which iterates over subsets of
+            # the indices of the non-zero elements of the permutation
+            self.cur_perm = self._next_perm()
+            non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
+            self._index_iter = itertools.chain.from_iterable(itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds) + 1))
 
         def __iter__(self):
             return self
 
         def next(self):
-            if self.done: raise StopIteration()
+            ep_coords = list(self.cur_perm)
+            try:
+                neg_inds = self._index_iter.next()
+            except StopIteration:
+                if self.perms_done:
+                    raise StopIteration()
+                else:
+                    ep_coords = self.cur_perm = self._next_perm()
+                    non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
+                    self._index_iter = itertools.chain.from_iterable(itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds)+1))
+                    neg_inds = self._index_iter.next()
+
+            for i in neg_inds:
+                ep_coords[i] = -ep_coords[i]
+
+            return self.liealg._convert_epsilons_to_funds(ep_coords)
+
+        def _next_perm(self):
             r = len(self._index_list)
             num_items = len(self._item_list)
 
-            #Construct new weight
+            # Construct new weight
             ep_coords = []
             for index in self._index_list:
                 ep_coords.append(self._item_list[index])
-            ret_val = tuple(self.liealg._convert_epsilons_to_funds(ep_coords))
 
-            #Find index to increment
-            i = r-2
+            # Find index to increment
+            i = r - 2
             j = 0
             while i >= 0:
                 j = self._index_list[i] + 1
@@ -1187,15 +1221,15 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
                 if j < num_items: break
                 i -= 1
 
-            #If we're finished, return the last weight
+            # If we're finished, return the last weight
             if i < 0:
-                self.done = True
-                return ret_val
+                self.perms_done = True
+                return ep_coords
 
-            #Increment indices
+            # Increment indices
             self._index_list[i] = j
-            self._rem_mat[i+1] = list(self._rem_mat[i])
-            self._rem_mat[i+1][j] -= 1
+            self._rem_mat[i + 1] = list(self._rem_mat[i])
+            self._rem_mat[i + 1][j] -= 1
             i += 1
             while i < r:
                 j = 0
@@ -1206,7 +1240,7 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
                 self._rem_mat[i + 1][j] -= 1
                 i += 1
 
-            return ret_val
+            return ep_coords
 
 
 class _Root(tuple):
