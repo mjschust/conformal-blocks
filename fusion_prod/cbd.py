@@ -1,6 +1,10 @@
-# cython: profile=True
 from __future__ import division
 from collections import defaultdict
+#Try to use gmpy2 for exact arithmetic if installed
+try:
+    from gmpy2 import mpq as Fraction
+except ImportError:
+    from fractions import Fraction
 import math, fractions, itertools
 '''
 Created on Nov 10, 2016
@@ -53,7 +57,10 @@ class ConformalBlocksBundle(object):
         weighted_rank = 0
         for wt in self.weights:
             weighted_rank += self.liealg.casimirScalar(wt)
-        weighted_rank = self.get_rank() * weighted_rank / (n * (n - 1))
+        if self.liealg.exact:
+            weighted_rank = Fraction(self.get_rank() * weighted_rank, n * (n - 1))
+        else:
+            weighted_rank = self.get_rank() * weighted_rank / (n * (n - 1))
 
         point_indices = [i for i in range(0, n)]
         for i in range(2, n // 2 + 1):
@@ -74,8 +81,12 @@ class ConformalBlocksBundle(object):
                     mu = self.liealg.get_dual_weight(mu_star)
                     sum += self.liealg.casimirScalar(mu) * self.liealg.get_rank(wt_list1 + [mu], self.level) * self.liealg.get_rank(wt_list2 + [mu_star], self.level)
 
-            sum = sum*math.factorial(i)*math.factorial(n-i)/math.factorial(n)
-            coord = (coord - sum) / (2 * (self.level + self.liealg.dual_coxeter()))
+            if self.liealg.exact:
+                sum = Fraction(sum * math.factorial(i) * math.factorial(n - i), math.factorial(n))
+                coord = Fraction(coord - sum, 2 * (self.level + self.liealg.dual_coxeter()))
+            else:
+                sum = sum*math.factorial(i)*math.factorial(n-i)/math.factorial(n)
+                coord = (coord - sum) / (2 * (self.level + self.liealg.dual_coxeter()))
             ret_val.append(coord)
 
         return ret_val
@@ -83,19 +94,32 @@ class ConformalBlocksBundle(object):
     def get_norm_sym_divisor_ray(self):
         """
         Computes the symmetrized divisor associated to the conformal blocks bundle and normalizes the
-        vector by clearing denominators.
+        vector by clearing denominators.  **DOES NOT WORK WELL WITH FP ARITHMETIC**
 
         :return: A list of numbers: the divisor ray given in the standard basis D_1, D_2,... of
             the symmetric nef cone.
         """
         divisor = self.get_symmetrized_divisor()
-        n_fact = math.factorial(len(self.weights))
-        int_div = [long(round(n_fact * x)) for x in divisor]
-        div_gcd = reduce(lambda x, y: fractions.gcd(x, y), int_div)
-        if div_gcd > 0:
-            return [x // div_gcd for x in int_div]
+
+        if self.liealg.exact:
+            denom_lcm = reduce(lambda x, y: self._lcm(x, y), [long(q.denominator) for q in divisor])
+            denom_clear = [long(round(q * denom_lcm)) for q in divisor]
+            div_gcd = reduce(lambda x, y: fractions.gcd(x, y), denom_clear)
+            if div_gcd > 0:
+                return [x//div_gcd for x in denom_clear]
+            else:
+                return denom_clear
         else:
-            return [x for x in int_div]
+            n_fact = math.factorial(len(self.weights))
+            int_div = [long(round(n_fact * x)) for x in divisor]
+            div_gcd = reduce(lambda x, y: fractions.gcd(x, y), int_div)
+            if div_gcd > 0:
+                return [x // div_gcd for x in int_div]
+            else:
+                return [x for x in int_div]
+
+    def _lcm(self, x, y):
+        return x*y//fractions.gcd(x, y)
 
     def intersect_F_curve(self, partition):
         """
@@ -161,10 +185,17 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
         n = len(self.weights)
         wt = self.weights[0]
         for i in range(2, n // 2 + 1):
-            coord = i * (n - i) * self.get_rank() * self.liealg.casimirScalar(wt) / (n - 1)
+            if self.liealg.exact:
+                coord = Fraction(i * (n - i) * self.get_rank() * self.liealg.casimirScalar(wt), n - 1)
+            else:
+                coord = i * (n - i) * self.get_rank() * self.liealg.casimirScalar(wt) / (n - 1)
             sum_list = [0]
             self._weightedFactor(wt, wt, 1, i - 1, n - i, sum_list, {})
-            coord = (coord - sum_list[0]) / (2 * (self.level + self.liealg.dual_coxeter()))
+
+            if self.liealg.exact:
+                coord = Fraction(coord - sum_list[0], 2 * (self.level + self.liealg.dual_coxeter()))
+            else:
+                coord = (coord - sum_list[0]) / (2 * (self.level + self.liealg.dual_coxeter()))
             ret_val.append(coord)
 
         return ret_val
@@ -193,17 +224,18 @@ class SimpleLieAlgebra(object):
     subclasses of each type.
     """
 
-    def __init__(self, rank, store_fusion=True):
+    def __init__(self, rank, store_fusion=True, exact=True):
         """
         :param rank: A positive integer: the rank of the Lie algebra.
         :param store_fusion: A boolean: if true the lie algebra will save computed fusion products;
         """
         self.rank = rank
         self.store_fusion = store_fusion
+        self.exact = exact
         if store_fusion: self._fusion_dict = {}
         self._pos_roots = []
         self._rep_dim_dict = {}
-        self._fte_dict = {}
+        #self._fte_dict = {}
 
     def get_rep_dim(self, high_weight):
         """
@@ -229,7 +261,11 @@ class SimpleLieAlgebra(object):
             numer = numer * (a + b)
             denom = denom * b
 
-        self._rep_dim_dict[high_weight] = long(round(numer / denom))
+
+        if self.exact:
+            self._rep_dim_dict[high_weight] = Fraction(numer, denom)
+        else:
+            self._rep_dim_dict[high_weight] = long(round(numer / denom))
         return self._rep_dim_dict[high_weight]
 
     def get_dominant_character(self, high_weight):
@@ -323,8 +359,12 @@ class SimpleLieAlgebra(object):
                 mult_sum = mult_sum + (a + n * b) * self._compute_mult(high_weight, new_dom_weight, pos_roots, dom_weights, dom_char)
 
         rho = self.get_rho()
-        multiplicity = 2 * mult_sum / (
-            self.length_squared(self._add_weights(high_weight, rho)) - self.length_squared(self._add_weights(wt, rho)))
+        if self.exact:
+            multiplicity = Fraction(2 * mult_sum, (self.length_squared(self._add_weights(high_weight, rho)) - self.length_squared(
+                    self._add_weights(wt, rho))))
+        else:
+            multiplicity = 2 * mult_sum / (
+                    self.length_squared(self._add_weights(high_weight, rho)) - self.length_squared(self._add_weights(wt, rho)))
         dom_char[wt] = multiplicity
         return multiplicity
 
@@ -551,9 +591,13 @@ class SimpleLieAlgebra(object):
             if mu_star in prod2:
                 sum += self.casimirScalar(mu_star) * prod1[mu] * prod2[mu_star]
         ret_val -= sum
-        ret_val = ret_val / (2 * (level + self.dual_coxeter()))
 
-        return long(round(ret_val))
+        if self.exact:
+            ret_val = Fraction(ret_val, (2 * (level + self.dual_coxeter())))
+        else:
+            ret_val = long(round(ret_val / (2 * (level + self.dual_coxeter()))))
+
+        return ret_val
 
 
     def killing_form(self, wt1, wt2):
@@ -768,7 +812,10 @@ class TypeALieAlgebra(SimpleLieAlgebra):
 
         n = sum(ep_coords1) * sum(ep_coords2)
 
-        ret_val = ret_val - n / (self.rank + 1)
+        if self.exact:
+            ret_val -= Fraction(n, self.rank + 1)
+        else:
+            ret_val -= n / (self.rank + 1)
 
         return ret_val
 
@@ -857,7 +904,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         return self._TypeAOrbitIterator(self, wt)
 
     def _convert_funds_to_epsilons(self, coords):
-        if coords in self._fte_dict: return self._fte_dict[coords]
+        #if coords in self._fte_dict: return self._fte_dict[coords]
 
         ret_coords = [0]
         part = 0
@@ -865,7 +912,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
             part += coords[i]
             ret_coords.insert(0, part)
 
-        self._fte_dict[coords] = ret_coords
+        #self._fte_dict[coords] = ret_coords
         return ret_coords
 
     def _convert_epsilons_to_funds(self, coords):
@@ -985,7 +1032,10 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
         for i in range(self.rank):
             ret_val = ret_val + ep_coords1[i] * ep_coords2[i]
 
-        return ret_val/2
+        if self.exact:
+            return Fraction(ret_val, 2)
+        else:
+            return ret_val/2
 
     def dual_coxeter(self):
         return self.rank + 1
@@ -1102,7 +1152,7 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
         return self._TypeCOrbitIterator(self, wt)
 
     def _convert_funds_to_epsilons(self, coords):
-        if coords in self._fte_dict: return list(self._fte_dict[coords])
+        #if coords in self._fte_dict: return list(self._fte_dict[coords])
 
         ret_coords = []
         part = 0
@@ -1110,7 +1160,7 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
             part += coords[i]
             ret_coords.insert(0, part)
 
-        self._fte_dict[coords] = ret_coords
+        #self._fte_dict[coords] = ret_coords
         return list(ret_coords)
 
     def _convert_epsilons_to_funds(self, coords):

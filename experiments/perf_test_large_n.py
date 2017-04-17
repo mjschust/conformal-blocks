@@ -21,13 +21,14 @@ import cProfile, time
 #Third test (after above optimizations)
 #----------
 #Tested the performance of rank and divisor calculations for r=5, l=4, n=10
-#Original:52 seconds
+#CPython: ~400s exact w/ Fraction,  ~160s exact w/ gmpy2, ~150s fp
+#PyPy: ~55s exact w/ Fraction, ~30s fp
 def experiment():
     rank = 5
     level = 4
     num_points = 10
 
-    liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
+    liealg = cbd.TypeALieAlgebra(rank, exact=False)
     print("Weight", "Rank", "Divisor", "Cosine")
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, num_points, level)
