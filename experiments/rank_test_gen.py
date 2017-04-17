@@ -10,14 +10,14 @@ def experiment():
     """
     rank = 2
     level = 3
-    num_points = 6
-    tries = 10
+    num_points = 4
+    tries = 100
 
-    liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
+    liealg = cbd.TypeCLieAlgebra(rank, store_fusion=False)
     A_l = liealg.get_weights(level)
     m2file = open("TestRank.m2", "w")
     m2file.write("loadPackage(\"ConformalBlocks\");\n")
-    m2file.write("sl_" + str(rank+1) + " = simpleLieAlgebra(\"A\", " + str(rank) + ");\n")
+    m2file.write("sl_" + str(rank+1) + " = simpleLieAlgebra(\"C\", " + str(rank) + ");\n")
     test_cases = []
     for i in range(tries):
         weights = [random.choice(A_l) for i in range(num_points)]
@@ -30,6 +30,7 @@ def experiment():
             else:
                 wt_str += "{" + str(wt)[1:-1] + "}, "
         wt_str = wt_str[:-2] + "}"
+
         m2file.write("V = conformalBlockVectorBundle(sl_" + str(rank+1) + ", " + str(level)  + ", " + wt_str + ", 0);\n")
         m2file.write("if " + str(cbb.get_rank()) + " != conformalBlockRank(V) then error(\"Bundle " + "(sl_" + str(rank+1) + ", " + str(level)  + ", " + wt_str + ") incorrect rank\");\n")
 
@@ -39,7 +40,7 @@ def experiment():
     test_out = subprocess.check_output(["M2", "--script", "TestRank.m2"])
     if test_out == "OK\n":
         print("OK")
-        print("liealg = cbd.TypeALieAlgebra(" + str(rank) + ")")
+        print("liealg = cbd.TypeCLieAlgebra(" + str(rank) + ")")
         for case in test_cases:
             cbb = cbd.ConformalBlocksBundle(liealg, case, level)
             print("cbb = cbd.ConformalBlocksBundle(liealg, " + str(case) + ", " + str(level) + ")")

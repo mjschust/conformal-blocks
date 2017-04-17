@@ -1102,7 +1102,7 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
         return self._TypeCOrbitIterator(self, wt)
 
     def _convert_funds_to_epsilons(self, coords):
-        if coords in self._fte_dict: return self._fte_dict[coords]
+        if coords in self._fte_dict: return list(self._fte_dict[coords])
 
         ret_coords = []
         part = 0
@@ -1111,7 +1111,7 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
             ret_coords.insert(0, part)
 
         self._fte_dict[coords] = ret_coords
-        return ret_coords
+        return list(ret_coords)
 
     def _convert_epsilons_to_funds(self, coords):
         ret_coords = []
@@ -1134,7 +1134,7 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
 
         ret_coords.append(2 * coords[-2] - 2 * coords[-1] - coords[-3])
         ret_coords.append(2 * coords[-1] - coords[-2])
-        return ret_coords
+        return tuple(ret_coords)
 
     class _TypeCOrbitIterator(object):
         '''

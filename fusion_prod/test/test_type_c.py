@@ -26,10 +26,10 @@ class MyTestCase(unittest.TestCase):
         for rt in liealg.get_positive_roots():
             self.assertTrue(tuple(rt.root_coords) in roots)
 
-        self.assertEqual([2, -1, 0], liealg._convert_roots_to_funds((1, 0, 0)))
-        self.assertEqual([-1, 2, -1], liealg._convert_roots_to_funds((0, 1, 0)))
-        self.assertEqual([0, -2, 2], liealg._convert_roots_to_funds((0, 0, 1)))
-        self.assertEqual([0, 1, 0], liealg._convert_roots_to_funds((1, 2, 1)))
+        self.assertEqual((2, -1, 0), liealg._convert_roots_to_funds((1, 0, 0)))
+        self.assertEqual((-1, 2, -1), liealg._convert_roots_to_funds((0, 1, 0)))
+        self.assertEqual((0, -2, 2), liealg._convert_roots_to_funds((0, 0, 1)))
+        self.assertEqual((0, 1, 0), liealg._convert_roots_to_funds((1, 2, 1)))
 
 
 
@@ -48,9 +48,13 @@ class MyTestCase(unittest.TestCase):
             print(liealg._convert_funds_to_epsilons(wt))
 
     def test_tensor(self):
-        liealg = cbd.TypeCLieAlgebra(3)
+        liealg = cbd.TypeCLieAlgebra(2)
 
-        print(liealg.fusion((1,1,0), (0,1,0), 2))
+        print(liealg.reflect_to_chamber_with_parity((2,-2)))
+        print(liealg.reflect_to_chamber_with_parity((2, -2)))
+        print(liealg.tensor((2, 0), (2, 0)))
+        print(liealg.tensor((2, 0), (2, 0)))
+
 
 
 
