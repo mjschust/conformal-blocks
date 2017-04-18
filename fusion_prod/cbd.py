@@ -1,5 +1,5 @@
 from __future__ import division
-from collections import defaultdict
+from collections import defaultdict, deque
 #Try to use gmpy2 for exact arithmetic if installed
 try:
     from gmpy2 import mpq as Fraction
@@ -699,20 +699,7 @@ class SimpleLieAlgebra(object):
         :param level: A positive integer.
         :return: A list of weights with level less than level.
         """
-        return [tuple(coords) for coords in self._get_weights(level, self.rank)]
-
-    def _get_weights(self, level, rank):
-        ret_list = []
-        if rank == 1:
-            for i in range(level + 1):
-                ret_list.append([i])
-        else:
-            r_minus_one_list = self._get_weights(level, rank - 1)
-            for coord in r_minus_one_list:
-                for i in range(level - reduce(lambda x, y: x + y, coord) + 1):
-                    ret_list.append(coord + [i])
-
-        return ret_list
+        raise NotImplementedError
 
     def reflect_to_chamber(self, wt):
         """
@@ -847,6 +834,28 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         self._pos_roots = ret_list
         return ret_list
 
+    def get_weights(self, level):
+        """
+        Computes a list of all weights of level less than or equal to the given level.
+
+        :param level: A positive integer.
+        :return: A list of weights with level less than level.
+        """
+        return [tuple(coords) for coords in self._get_weights(level, self.rank)]
+
+    def _get_weights(self, level, rank):
+        ret_list = []
+        if rank == 1:
+            for i in range(level + 1):
+                ret_list.append([i])
+        else:
+            r_minus_one_list = self._get_weights(level, rank - 1)
+            for coord in r_minus_one_list:
+                for i in range(level - reduce(lambda x, y: x + y, coord) + 1):
+                    ret_list.append(coord + [i])
+
+        return ret_list
+
     def reflect_to_chamber(self, wt):
         ret_coords = self._insertsort(self._convert_funds_to_epsilons(wt))
 
@@ -910,6 +919,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         part = 0
         for i in reversed(range(len(coords))):
             part += coords[i]
+            #Looks bad but faster than using a deque for usual case rank
             ret_coords.insert(0, part)
 
         #self._fte_dict[coords] = ret_coords
@@ -1018,6 +1028,311 @@ class TypeALieAlgebra(SimpleLieAlgebra):
 
             return ret_val
 
+class TypeBLieAlgebra(SimpleLieAlgebra):
+    """
+    A type B Lie algebra.
+    """
+
+    def killing_form(self, wt1, wt2):
+        ret_val = 0
+        ep_coords1 = self._convert_funds_to_epsilons(wt1)
+        ep_coords2 = self._convert_funds_to_epsilons(wt2)
+
+        for i in range(self.rank):
+            ret_val = ret_val + ep_coords1[i] * ep_coords2[i]
+
+        return ret_val
+
+    def dual_coxeter(self):
+        return 2*self.rank - 1
+
+    def get_level(self, wt):
+        if len(wt) == 1:
+            return wt[0]
+        elif len(wt) == 2:
+            return wt[0] + wt[1]
+        else:
+            ret_val = wt[0] + wt[-1]
+            for i in range(1, len(wt)-1):
+                ret_val += 2*wt[i]
+            return ret_val
+
+    def get_dual_weight(self, wt):
+        return tuple(wt)
+
+    def get_positive_roots(self):
+        if len(self._pos_roots) > 0: return self._pos_roots
+
+        ret_list = []
+        coords = []
+        for i in range(self.rank):
+            coords.append(0)
+
+        for i in range(len(coords)):
+            for j in range(i, len(coords)):
+                coords[j] = 1
+                ret_list.append(_Root(self, list(coords)))
+
+            for j in range(i, len(coords)):
+                coords[j] = 0
+
+        for i in range(len(coords)-1, 0, -1):
+            coords[i] = 2
+            for j in range(i-1, -1, -1):
+                coords[j] = 1
+                ret_list.append(_Root(self, list(coords)))
+
+            for j in range(i-1, -1, -1):
+                coords[j] = 0
+
+        self._pos_roots = ret_list
+        return ret_list
+
+    def get_weights(self, level):
+        """
+        Computes a list of all weights of level less than or equal to the given level.
+
+        :param level: A positive integer.
+        :return: A list of weights with level less than level.
+        """
+        raise NotImplementedError
+        ret_list = []
+        return ret_list
+
+    def _get_weights(self, level, rank):
+        ret_list = []
+        if rank == 1:
+            for i in range(level + 1):
+                ret_list.append([i])
+        else:
+            r_minus_one_list = self._get_weights(level, rank - 1)
+            for coord in r_minus_one_list:
+                for i in range(level - reduce(lambda x, y: x + y, coord) + 1):
+                    ret_list.append(coord + [i])
+
+        return ret_list
+
+    def reflect_to_chamber(self, wt):
+        #First reflect by making epsilon coords positive
+        ret_coords = self._convert_funds_to_epsilons(wt)
+
+        ret_coords = [abs(x) for x in ret_coords]
+
+        #Sort to finish reflection into chamber
+        ret_coords = self._insertsort(ret_coords)
+
+        #Return weight in terms of fundamental weights
+        return self._convert_epsilons_to_funds(ret_coords)
+
+    def _insertsort(self, coords):
+        ret_list = list(coords)
+
+        for i in range(1, len(ret_list)):
+            j = i
+            while j > 0 and ret_list[j - 1] < ret_list[j]:
+                ret_list[j - 1], ret_list[j] = ret_list[j], ret_list[j - 1]
+                j = j - 1
+
+        return ret_list
+
+    def reflect_to_chamber_with_parity(self, wt):
+        #First reflect by making epsilon coords positive
+        ret_coords = self._convert_funds_to_epsilons(wt)
+        parity = 1
+        for i in range(len(ret_coords)):
+            if ret_coords[i] < 0:
+                ret_coords[i] = -ret_coords[i]
+                parity *= -1
+
+        #Then sort to finish reflection
+        ret_coords, sort_parity = self._insertsort_parity(ret_coords)
+        parity *= sort_parity
+
+        return self._convert_epsilons_to_funds(ret_coords), parity
+
+    def _insertsort_parity(self, coords):
+        ret_list = list(coords)
+
+        parity = 1
+        for i in range(1, len(ret_list)):
+            j = i
+            while j > 0 and ret_list[j - 1] < ret_list[j]:
+                ret_list[j - 1], ret_list[j] = ret_list[j], ret_list[j - 1]
+                parity = parity * -1
+                j = j - 1
+
+        return ret_list, parity
+
+    def reflect_to_alcove_with_parity(self, wt, ell):
+        ret_coords, parity = self._insertsort_parity(self._convert_funds_to_epsilons(wt))
+
+        while (ret_coords[0] + ret_coords[1] > ell):
+            #wt := wt + (ell-level(wt))*theta
+            ret_coords[0] = ell - ret_coords[1]
+            ret_coords[1] = ell - ret_coords[0]
+
+            #Return to chamber
+            fin_parity = -1
+            for i in range(len(ret_coords)):
+                if ret_coords[i] < 0:
+                    ret_coords[i] = -ret_coords[i]
+                    fin_parity *= -1
+
+            ret_coords, sort_parity = self._insertsort_parity(ret_coords)
+            fin_parity *= sort_parity
+
+            parity *= fin_parity
+
+        return self._convert_epsilons_to_funds(ret_coords), parity
+
+    def get_orbit_iter(self, wt):
+        return self._TypeBOrbitIterator(self, wt)
+
+    def _convert_funds_to_epsilons(self, coords):
+        #if coords in self._fte_dict: return list(self._fte_dict[coords])
+
+        ret_coords = []
+        if self.exact:
+            part = Fraction(coords[-1], 2)
+        else:
+            part = coords[-1] / 2
+        ret_coords.append(part)
+        for i in reversed(range(len(coords)-1)):
+            part += coords[i]
+            # Looks bad but faster than using a deque for usual case rank
+            ret_coords.insert(0, part)
+
+        #self._fte_dict[coords] = ret_coords
+        return ret_coords
+
+    def _convert_epsilons_to_funds(self, coords):
+        ret_coords = []
+        for i in range(len(coords) - 1):
+            ret_coords.append(coords[i] - coords[i + 1])
+        ret_coords.append(2 * coords[-1])
+
+        return tuple(ret_coords)
+
+    def _convert_roots_to_funds(self, coords):
+        if len(coords) == 1:
+            return [2 * coords[0]]
+        elif len(coords) == 2:
+            return [2 * coords[0] - 2 * coords[1], -coords[0] + 2 * coords[1]]
+
+        ret_coords = []
+        ret_coords.append(2 * coords[0] - coords[1])
+        for i in range(1, len(coords) - 1):
+            ret_coords.append(2 * coords[i] - coords[i + 1] - coords[i - 1])
+
+        ret_coords.append(2 * coords[-1] - 2 * coords[-2])
+        return tuple(ret_coords)
+
+    class _TypeBOrbitIterator(object):
+        '''
+        Optimized iterator object that traverses the Weyl group orbit of a given weight.
+
+        Attributes:
+            no public attributes
+        '''
+        def __init__(self, liealg, wt):
+            ep_coords = liealg._convert_funds_to_epsilons(liealg.reflect_to_chamber(wt))
+
+            #Construct list of items and multiplicities
+            self._item_list = [ep_coords[0]]
+            cur_item = ep_coords[0]
+            rem_list = [0]
+            for item in ep_coords:
+                if item < cur_item:
+                    self._item_list.append(item)
+                    rem_list.append(1)
+                    cur_item = item
+                else:
+                    rem_list[-1] += 1
+
+            #Contruct matrix of remaining items, and initial index list
+            index_list = []
+            rem_mat = [list(rem_list)]
+            for i in range(len(ep_coords)):
+                j = 0
+                while rem_mat[i][j] == 0:
+                    j += 1
+                index_list.append(j)
+                rem_mat.append(list(rem_mat[i]))
+                rem_mat[i+1][j] -= 1
+
+            self._index_list = index_list
+            self._rem_mat = rem_mat
+            self.perms_done = False
+            self.liealg = liealg
+
+            # Get first permutation, and construct index iterator, which iterates over subsets of
+            # the indices of the non-zero elements of the permutation
+            self.cur_perm = self._next_perm()
+            non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
+            self._index_iter = itertools.chain.from_iterable(itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds) + 1))
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            ep_coords = list(self.cur_perm)
+            try:
+                neg_inds = self._index_iter.next()
+            except StopIteration:
+                if self.perms_done:
+                    raise StopIteration()
+                else:
+                    ep_coords = self.cur_perm = self._next_perm()
+                    non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
+                    self._index_iter = itertools.chain.from_iterable(itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds)+1))
+                    neg_inds = self._index_iter.next()
+
+            for i in neg_inds:
+                ep_coords[i] = -ep_coords[i]
+
+            return self.liealg._convert_epsilons_to_funds(ep_coords)
+
+        def _next_perm(self):
+            r = len(self._index_list)
+            num_items = len(self._item_list)
+
+            # Construct new weight
+            ep_coords = []
+            for index in self._index_list:
+                ep_coords.append(self._item_list[index])
+
+            # Find index to increment
+            i = r - 2
+            j = 0
+            while i >= 0:
+                j = self._index_list[i] + 1
+                while j < num_items:
+                    if self._rem_mat[i][j] > 0: break
+                    j += 1
+                if j < num_items: break
+                i -= 1
+
+            # If we're finished, return the last weight
+            if i < 0:
+                self.perms_done = True
+                return ep_coords
+
+            # Increment indices
+            self._index_list[i] = j
+            self._rem_mat[i + 1] = list(self._rem_mat[i])
+            self._rem_mat[i + 1][j] -= 1
+            i += 1
+            while i < r:
+                j = 0
+                while self._rem_mat[i][j] == 0:
+                    j += 1
+                self._index_list[i] = j
+                self._rem_mat[i + 1] = list(self._rem_mat[i])
+                self._rem_mat[i + 1][j] -= 1
+                i += 1
+
+            return ep_coords
+
 
 class TypeCLieAlgebra(SimpleLieAlgebra):
     """
@@ -1074,6 +1389,28 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
                 coords[j] = 0
 
         self._pos_roots = ret_list
+        return ret_list
+
+    def get_weights(self, level):
+        """
+        Computes a list of all weights of level less than or equal to the given level.
+
+        :param level: A positive integer.
+        :return: A list of weights with level less than level.
+        """
+        return [tuple(coords) for coords in self._get_weights(level, self.rank)]
+
+    def _get_weights(self, level, rank):
+        ret_list = []
+        if rank == 1:
+            for i in range(level + 1):
+                ret_list.append([i])
+        else:
+            r_minus_one_list = self._get_weights(level, rank - 1)
+            for coord in r_minus_one_list:
+                for i in range(level - reduce(lambda x, y: x + y, coord) + 1):
+                    ret_list.append(coord + [i])
+
         return ret_list
 
     def reflect_to_chamber(self, wt):
@@ -1158,10 +1495,11 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
         part = 0
         for i in reversed(range(len(coords))):
             part += coords[i]
+            # Looks bad but faster than using a deque for usual case rank
             ret_coords.insert(0, part)
 
         #self._fte_dict[coords] = ret_coords
-        return list(ret_coords)
+        return ret_coords
 
     def _convert_epsilons_to_funds(self, coords):
         ret_coords = []
