@@ -2,7 +2,10 @@
 from __future__ import division
 from collections import defaultdict
 import math, fractions, itertools
-#import sage.interfaces.singular
+try:
+    import sage.all as sage
+except ImportError:
+    print("**Sage functions are not available**\n")
 '''
 Created on Nov 10, 2016
 
