@@ -12,7 +12,6 @@ Created on Nov 10, 2016
 @author: mjschust
 '''
 
-
 class ConformalBlocksBundle(object):
     """
     A class representing a conformal blocks vector bundle.
