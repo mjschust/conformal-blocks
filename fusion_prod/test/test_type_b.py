@@ -26,28 +26,34 @@ class MyTestCase(unittest.TestCase):
         roots = [(1,0,0), (0,1,0), (0,0,1), (1,1,0), (0,1,1), (1,1,1), (0,1,2), (1,1,2), (1,2,2)]
         for rt in liealg.get_positive_roots():
             self.assertTrue(tuple(rt.root_coords) in roots)
+            roots.remove(tuple(rt.root_coords))
+        self.assertTrue(len(roots) == 0)
 
         self.assertEqual((2, -1, 0), liealg._convert_roots_to_funds((1, 0, 0)))
         self.assertEqual((-1, 2, -2), liealg._convert_roots_to_funds((0, 1, 0)))
         self.assertEqual((0, -1, 2), liealg._convert_roots_to_funds((0, 0, 1)))
         self.assertEqual((1, -1, 2), liealg._convert_roots_to_funds((1, 1, 2)))
 
+        wts = [(0,0,0),(0,0,1),(0,0,2),(0,0,3),(0,0,4),(0,1,0),(0,1,1),(0,1,2),(0,2,0),(1,0,0),(1,0,1),(1,0,2),
+            (1,0,3),(1,1,0),(1,1,1),(2,0,0),(2,0,1),(2,0,2),(2,1,0),(3,0,0),(3,0,1),(4,0,0)]
+        for wt in liealg.get_weights(4):
+            self.assertTrue(wt in wts)
+            wts.remove(wt)
+        self.assertTrue(len(wts) == 0)
+
     def test_reflection(self):
-        liealg = cbd.TypeBLieAlgebra(3)
+        liealg = cbd.TypeBLieAlgebra(2)
 
-        print(liealg.reflect_to_chamber_with_parity(liealg._convert_epsilons_to_funds([-1,1,4])))
+        self.assertEqual(((3,2), -1), liealg.reflect_to_alcove_with_parity((3,4), 6))
+        self.assertEqual(((1, 4), -1), liealg.reflect_to_alcove_with_parity((1, 6), 6))
 
-        print(liealg.reflect_to_alcove_with_parity(liealg._convert_epsilons_to_funds([-1, 1, 4]), 2))
-
-    def test_orbit(self):
-        liealg = cbd.TypeCLieAlgebra(3)
-
-        for wt in liealg.get_orbit_iter((0,0,0)):
-            print(liealg._convert_funds_to_epsilons(wt))
-
-    def test_tensor(self):
-        liealg = cbd.TypeCLieAlgebra(2)
-        print(liealg.get_rep_dim((1,1)))
+    def test_fusion(self):
+        liealg = cbd.TypeBLieAlgebra(2, exact=False)
+        V = liealg.fusion((1,1), (1,2), 3)
+        self.assertTrue(V[(0, 1)] == 1)
+        self.assertTrue(V[(0, 3)] == 1)
+        self.assertTrue(V[(2, 1)] == 1)
+        self.assertTrue(V[(1, 1)] == 2)
 
 
 

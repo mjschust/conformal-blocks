@@ -5,6 +5,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="sage" />
+          <option value="fusion_prod.cbd.profile" />
         </list>
       </option>
     </inspection_tool>

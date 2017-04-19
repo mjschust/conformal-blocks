@@ -1,11 +1,11 @@
 from __future__ import division
-from collections import defaultdict, deque
+from collections import defaultdict
+import math, fractions, itertools
 #Try to use gmpy2 for exact arithmetic if installed
 try:
     from gmpy2 import mpq as Fraction
 except ImportError:
     from fractions import Fraction
-import math, fractions, itertools
 '''
 Created on Nov 10, 2016
 
@@ -430,7 +430,7 @@ class SimpleLieAlgebra(object):
             if self.get_level(wt) == ell + 1: continue
 
             wt_rho = self._add_weights(wt, rho)
-            new_weight, parity = self.reflect_to_alcove_with_parity(wt_rho, ell + self.rank + 1)
+            new_weight, parity = self.reflect_to_alcove_with_parity(wt_rho, ell + self.get_level(rho) + 1)
             lev_ell_weight = self._sub_weights(new_weight, rho)
             if not self.is_dominant(lev_ell_weight) or self.get_level(lev_ell_weight) > ell: continue
 
@@ -1088,14 +1088,11 @@ class TypeBLieAlgebra(SimpleLieAlgebra):
         return ret_list
 
     def get_weights(self, level):
-        """
-        Computes a list of all weights of level less than or equal to the given level.
-
-        :param level: A positive integer.
-        :return: A list of weights with level less than level.
-        """
-        raise NotImplementedError
         ret_list = []
+        for a_1 in range(level + 1):
+            coords_list = self._get_weights(level - a_1, self.rank - 1)
+            for coords in coords_list:
+                ret_list.append(tuple(itertools.chain([a_1], coords)))
         return ret_list
 
     def _get_weights(self, level, rank):
@@ -1104,10 +1101,10 @@ class TypeBLieAlgebra(SimpleLieAlgebra):
             for i in range(level + 1):
                 ret_list.append([i])
         else:
-            r_minus_one_list = self._get_weights(level, rank - 1)
-            for coord in r_minus_one_list:
-                for i in range(level - reduce(lambda x, y: x + y, coord) + 1):
-                    ret_list.append(coord + [i])
+            for a_i in range(level//2 + 1):
+                coords_list = self._get_weights(level - 2*a_i, rank - 1)
+                for coords in coords_list:
+                    ret_list.append([a_i] + coords)
 
         return ret_list
 
@@ -1167,8 +1164,7 @@ class TypeBLieAlgebra(SimpleLieAlgebra):
 
         while (ret_coords[0] + ret_coords[1] > ell):
             #wt := wt + (ell-level(wt))*theta
-            ret_coords[0] = ell - ret_coords[1]
-            ret_coords[1] = ell - ret_coords[0]
+            ret_coords[0], ret_coords[1] = ell - ret_coords[1], ell - ret_coords[0]
 
             #Return to chamber
             fin_parity = -1
@@ -1216,7 +1212,7 @@ class TypeBLieAlgebra(SimpleLieAlgebra):
         if len(coords) == 1:
             return [2 * coords[0]]
         elif len(coords) == 2:
-            return [2 * coords[0] - 2 * coords[1], -coords[0] + 2 * coords[1]]
+            return [2 * coords[0] - coords[1], -2 * coords[0] + 2 * coords[1]]
 
         ret_coords = []
         ret_coords.append(2 * coords[0] - coords[1])

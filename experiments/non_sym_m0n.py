@@ -15,9 +15,9 @@ def experiment():
     num_points = 10
     tries = 100
 
-    liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
+    liealg = cbd.TypeALieAlgebra(rank, store_fusion=True, exact=False)
     A_l = liealg.get_weights(level)
-    print("Weight", "Rank", "Divisor", "Cosine")
+    print("Weight", "Rank", "Divisor")
     for i in range(tries):
         weights = [random.choice(A_l) for i in range(num_points)]
         if sum([sum(liealg._convert_funds_to_epsilons(wt)) for wt in weights]) % (rank+1) != 0: continue

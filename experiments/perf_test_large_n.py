@@ -30,18 +30,20 @@ import cProfile, time
 def experiment():
     rank = 4
     level = 4
-    num_points = 10
+    num_points = 6
 
-    liealg = cbd.TypeCLieAlgebra(rank, exact=True)
-    print("Weight", "Rank", "Divisor", "Cosine")
+    liealg = cbd.TypeBLieAlgebra(rank, store_fusion=True, exact=False)
+    print("Weight", "Rank", "Divisor")
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, num_points, level)
-        if cbb.get_rank() == 0: continue
+        if cbb.get_rank() == 0:
+            #print(wt, 0, 0)
+            continue
         divisor = cbb.get_symmetrized_divisor()
         print(wt, cbb.get_rank(), divisor)
 
 if __name__ == '__main__':
-    t0 = time.clock()
-    experiment()
-    print(time.clock() -t0)
-    #cProfile.run('experiment()', sort='cumtime')
+    #t0 = time.clock()
+    #experiment()
+    #print(time.clock() -t0)
+    cProfile.run('experiment()', sort='tottime')

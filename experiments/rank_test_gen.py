@@ -1,16 +1,15 @@
 from __future__ import division
 import fusion_prod.cbd as cbd
-import cProfile, time, random
-import subprocess
+import cProfile, time, random, subprocess
 
 def experiment():
     """
     Generates Macaulay 2 test cases, runs them using Swinarski's program, then outputs new unit tests if successful
     :return: Null
     """
-    rank = 2
+    rank = 3
     level = 3
-    num_points = 3
+    num_points = 6
     tries = 10
 
     liealg = cbd.TypeBLieAlgebra(rank)
@@ -21,7 +20,6 @@ def experiment():
     test_cases = []
     for i in range(tries):
         weights = [random.choice(A_l) for i in range(num_points)]
-        print(weights)
         test_cases.append(weights)
         cbb = cbd.ConformalBlocksBundle(liealg, weights, level)
         wt_str = "{"
@@ -40,19 +38,16 @@ def experiment():
 
     test_out = subprocess.check_output(["M2", "--script", "TestRank.m2"])
     if test_out == "OK\n":
-        print("OK")
         print("liealg = cbd.TypeCLieAlgebra(" + str(rank) + ")")
         for case in test_cases:
             cbb = cbd.ConformalBlocksBundle(liealg, case, level)
             print("cbb = cbd.ConformalBlocksBundle(liealg, " + str(case) + ", " + str(level) + ")")
             print("self.assertEqual(" + str(cbb.get_rank()) + ", cbb.get_rank(), \"Rank incorrect: (" + str(case) + ", " + str(level) + ")\")")
             print("")
+        print("OK")
     else:
         print(test_out)
 
 
 if __name__ == '__main__':
-    t0 = time.clock()
     experiment()
-    print(time.clock() -t0)
-    #cProfile.run('experiment()', sort='cumtime')
