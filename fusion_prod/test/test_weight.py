@@ -20,11 +20,7 @@ class Test(unittest.TestCase):
         self.assertEqual(2, liealg.killing_form(wt, rt), "Killing product incorrect")
         self.assertItemsEqual([1,0,1], liealg.reflect_to_chamber(rt), "Reflection incorrect")
         rt_list = liealg.get_positive_roots()
-        wt2 = tuple([0, 2, 1])
-        self.assertTrue(wt == wt2, "Weights should be equal")
-        test_dict = {}
-        test_dict[wt] = 1
-        self.assertTrue(wt2 in test_dict, "Weight should be a key")
+
         
     def testSL2Weights(self):
         
@@ -38,14 +34,10 @@ class Test(unittest.TestCase):
         wt2 = tuple([-1])
         self.assertItemsEqual([1], liealg.reflect_to_chamber(wt), "Reflection incorrect")
         rt_list = liealg.get_positive_roots()
-        wt2 = tuple([1])
-        self.assertTrue(wt == wt2, "Weights should be equal")
-        test_dict = {}
-        test_dict[wt] = 1
-        self.assertTrue(wt2 in test_dict, "Weight should be a key")
+
         
         
-        
+
         
 
 if __name__ == "__main__":
