@@ -4,7 +4,7 @@ Created on Nov 2, 2016
 @author: mjschust
 '''
 import unittest
-import fusion_prod.cbd as cbd
+import fusion_prod.cbbundle as cbd
 
 class Test(unittest.TestCase):
 

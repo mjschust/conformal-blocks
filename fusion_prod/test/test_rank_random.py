@@ -1,5 +1,5 @@
 import unittest
-import fusion_prod.cbd as cbd
+import fusion_prod.cbbundle as cbd
 
 
 class MyTestCase(unittest.TestCase):

@@ -1,5 +1,5 @@
 from __future__ import division
-import fusion_prod.cbd as cbd
+import fusion_prod.cbbundle as cbd
 import cProfile, time
 
 #First test
@@ -28,11 +28,11 @@ import cProfile, time
 #CPython: ?
 #PyPy: ~39s exact w/ Fraction, ~26s fp
 def experiment():
-    rank = 4
+    rank = 5
     level = 4
-    num_points = 6
+    num_points = 10
 
-    liealg = cbd.TypeBLieAlgebra(rank, store_fusion=True, exact=False)
+    liealg = cbd.TypeALieAlgebra(rank, store_fusion=True, exact=False)
     print("Weight", "Rank", "Divisor")
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, num_points, level)
@@ -43,7 +43,7 @@ def experiment():
         print(wt, cbb.get_rank(), divisor)
 
 if __name__ == '__main__':
-    #t0 = time.clock()
-    #experiment()
-    #print(time.clock() -t0)
-    cProfile.run('experiment()', sort='tottime')
+    t0 = time.clock()
+    experiment()
+    print(time.clock() -t0)
+    #cProfile.run('experiment()', sort='tottime')

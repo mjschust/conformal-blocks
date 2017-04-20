@@ -1,5 +1,5 @@
 from __future__ import division
-import fusion_prod.cbd as cbd
+import fusion_prod.cbbundle as cbd
 import cProfile, time, random, subprocess
 
 def experiment():
