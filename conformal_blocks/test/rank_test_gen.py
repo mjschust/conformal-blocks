@@ -7,16 +7,16 @@ def experiment():
     Generates Macaulay 2 test cases, runs them using Swinarski's program, then outputs new unit tests if successful
     :return: Null
     """
-    rank = 2
-    level = 1
-    num_points = 6
+    rank = 3
+    level = 3
+    num_points = 5
     tries = 10
 
-    liealg = cbd.TypeCLieAlgebra(rank)
+    liealg = cbd.TypeBLieAlgebra(rank)
     A_l = liealg.get_weights(level)
     m2file = open("TestRank.m2", "w")
     m2file.write("loadPackage(\"ConformalBlocks\");\n")
-    m2file.write("sl_" + str(rank+1) + " = simpleLieAlgebra(\"C\", " + str(rank) + ");\n")
+    m2file.write("sl_" + str(rank+1) + " = simpleLieAlgebra(\"B\", " + str(rank) + ");\n")
     test_cases = []
     for i in range(tries):
         weights = [random.choice(A_l) for i in range(num_points)]
@@ -38,7 +38,7 @@ def experiment():
 
     test_out = subprocess.check_output(["M2", "--script", "TestRank.m2"])
     if test_out == "OK\n":
-        print("liealg = cbd.TypeCLieAlgebra(" + str(rank) + ")")
+        print("liealg = cbd.TypeBLieAlgebra(" + str(rank) + ")")
         for case in test_cases:
             cbb = cbd.ConformalBlocksBundle(liealg, case, level)
             print("cbb = cbd.ConformalBlocksBundle(liealg, " + str(case) + ", " + str(level) + ")")
