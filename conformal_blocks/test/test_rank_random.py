@@ -1,8 +1,41 @@
 import unittest
-import fusion_prod.cbbundle as cbd
+import conformal_blocks.cbbundle as cbd
 
 
 class MyTestCase(unittest.TestCase):
+
+    def test_C2N6(self):
+        #Level 1
+        liealg = cbd.TypeCLieAlgebra(2)
+        cbb = cbd.ConformalBlocksBundle(liealg, [(1, 0), (0, 0), (0, 0), (1, 0), (1, 0), (0, 1)], 1)
+        self.assertEqual(0, cbb.get_rank(), "Rank incorrect: ([(1, 0), (0, 0), (0, 0), (1, 0), (1, 0), (0, 1)], 1)")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [(0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (1, 0)], 1)
+        self.assertEqual(0, cbb.get_rank(), "Rank incorrect: ([(0, 1), (0, 1), (0, 1), (0, 1), (0, 1), (1, 0)], 1)")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [(0, 0), (1, 0), (0, 0), (0, 1), (0, 0), (1, 0)], 1)
+        self.assertEqual(1, cbb.get_rank(), "Rank incorrect: ([(0, 0), (1, 0), (0, 0), (0, 1), (0, 0), (1, 0)], 1)")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [(0, 1), (0, 0), (0, 0), (0, 1), (1, 0), (0, 1)], 1)
+        self.assertEqual(0, cbb.get_rank(), "Rank incorrect: ([(0, 1), (0, 0), (0, 0), (0, 1), (1, 0), (0, 1)], 1)")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [(0, 0), (0, 0), (1, 0), (0, 1), (0, 0), (0, 1)], 1)
+        self.assertEqual(0, cbb.get_rank(), "Rank incorrect: ([(0, 0), (0, 0), (1, 0), (0, 1), (0, 0), (0, 1)], 1)")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [(1, 0), (0, 0), (0, 1), (0, 1), (0, 1), (0, 0)], 1)
+        self.assertEqual(0, cbb.get_rank(), "Rank incorrect: ([(1, 0), (0, 0), (0, 1), (0, 1), (0, 1), (0, 0)], 1)")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [(0, 0), (0, 1), (1, 0), (0, 0), (0, 1), (0, 1)], 1)
+        self.assertEqual(0, cbb.get_rank(), "Rank incorrect: ([(0, 0), (0, 1), (1, 0), (0, 0), (0, 1), (0, 1)], 1)")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [(1, 0), (1, 0), (0, 1), (0, 1), (0, 0), (0, 0)], 1)
+        self.assertEqual(1, cbb.get_rank(), "Rank incorrect: ([(1, 0), (1, 0), (0, 1), (0, 1), (0, 0), (0, 0)], 1)")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [(0, 1), (1, 0), (1, 0), (0, 0), (0, 1), (1, 0)], 1)
+        self.assertEqual(0, cbb.get_rank(), "Rank incorrect: ([(0, 1), (1, 0), (1, 0), (0, 0), (0, 1), (1, 0)], 1)")
+
+        cbb = cbd.ConformalBlocksBundle(liealg, [(1, 0), (0, 0), (1, 0), (1, 0), (1, 0), (0, 0)], 1)
+        self.assertEqual(2, cbb.get_rank(), "Rank incorrect: ([(1, 0), (0, 0), (1, 0), (1, 0), (1, 0), (0, 0)], 1)")
 
     def test_A2N6(self):
         #Level 2

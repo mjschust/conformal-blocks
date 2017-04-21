@@ -1,5 +1,5 @@
 from __future__ import division
-import fusion_prod.cbbundle as cbd
+import conformal_blocks.cbbundle as cbd
 import cProfile, time, random, subprocess
 
 def experiment():
@@ -7,16 +7,16 @@ def experiment():
     Generates Macaulay 2 test cases, runs them using Swinarski's program, then outputs new unit tests if successful
     :return: Null
     """
-    rank = 3
-    level = 3
+    rank = 2
+    level = 1
     num_points = 6
     tries = 10
 
-    liealg = cbd.TypeBLieAlgebra(rank)
+    liealg = cbd.TypeCLieAlgebra(rank)
     A_l = liealg.get_weights(level)
     m2file = open("TestRank.m2", "w")
     m2file.write("loadPackage(\"ConformalBlocks\");\n")
-    m2file.write("sl_" + str(rank+1) + " = simpleLieAlgebra(\"B\", " + str(rank) + ");\n")
+    m2file.write("sl_" + str(rank+1) + " = simpleLieAlgebra(\"C\", " + str(rank) + ");\n")
     test_cases = []
     for i in range(tries):
         weights = [random.choice(A_l) for i in range(num_points)]

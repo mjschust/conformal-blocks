@@ -5,7 +5,7 @@ Created on Nov 21, 2016
 '''
 from __future__ import division
 import time
-import fusion_prod.cbbundle as cbd
+import conformal_blocks.cbbundle as cbd
 import math, cProfile
 
 #Computes all non-trivial 4-point conformal blocks divisors of specified Lie rank and level.

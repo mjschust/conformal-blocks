@@ -1,5 +1,5 @@
 from __future__ import division
-import fusion_prod.cbbundle as cbd
+import conformal_blocks.cbbundle as cbd
 import cProfile, time, random
 
 #First test

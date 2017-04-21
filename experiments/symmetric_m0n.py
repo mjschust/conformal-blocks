@@ -4,7 +4,7 @@ Created on Nov 21, 2016
 @author: mjschust
 '''
 from __future__ import division
-import fusion_prod.cbbundle as cbd
+import conformal_blocks.cbbundle as cbd
 import math
 import cProfile, time
 

@@ -1,6 +1,6 @@
 from __future__ import division
 import unittest
-import fusion_prod.cbbundle as cbd
+import conformal_blocks.cbbundle as cbd
 
 
 class MyTestCase(unittest.TestCase):
