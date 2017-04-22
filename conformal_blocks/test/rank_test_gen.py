@@ -9,8 +9,8 @@ def experiment():
     """
     rank = 3
     level = 3
-    num_points = 5
-    tries = 10
+    num_points = 3
+    tries = 1000
 
     liealg = cbd.TypeBLieAlgebra(rank)
     A_l = liealg.get_weights(level)

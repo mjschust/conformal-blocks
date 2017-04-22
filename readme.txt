@@ -89,6 +89,12 @@ Three example scripts are included.  Scripts allow you to do more complicated ca
 To run them follow these steps:
 
 1.  Open a terminal and change directory to "conformal-blocks-master".
-2.  Run sage.
-3.  Enter the command ``load("experiments/<Script>.py")" to run the script.
+2.  Start Sage or Ipython
+3.  In Sage, enter the command
+
+    sage: load("experiments/<Script>.py")
+
+    to run the script.  In IPython enter the command:
+
+    : run "experiments/<Script>.py"
 
