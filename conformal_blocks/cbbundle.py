@@ -206,6 +206,32 @@ class ConformalBlocksBundle(object):
     def _lcm(self, x, y):
         return x*y//fractions.gcd(x, y)
 
+    def get_F_curves(self):
+        """
+        Generates a list of all F-curves with the same number of points as the conformal
+        blocks bundle.
+
+        :return: A list of partitions of [1, 2,..., n]: the list of F-curves
+        """
+        n = len(self.weights)
+        all_points = set([x for x in range(1, n+1)])
+        ret_list = []
+        if n == 3:
+            return ret_list
+
+        for r_1 in range(1, n - 2):
+            for sset_1 in itertools.combinations(all_points, r_1):
+                comp_sset_1 = all_points.difference(sset_1)
+                for r_2 in range(1, n - r_1 - 1):
+                    for sset_2 in itertools.combinations(comp_sset_1, r_2):
+                        comp_sset_2 = comp_sset_1.difference(sset_2)
+                        for r_3 in range(1, n - r_1 - r_2):
+                            for sset_3 in itertools.combinations(comp_sset_2, r_3):
+                                sset_4 = comp_sset_2.difference(sset_3)
+                                ret_list.append([sset_1, sset_2, sset_3, tuple(sset_4)])
+
+        return ret_list
+
     def intersect_F_curve(self, partition):
         """
         Computes the intersection of the divisor associated to this conformal blocks bundle with
@@ -237,8 +263,8 @@ class ConformalBlocksBundle(object):
                     for wt4 in prod4.keys():
                         if prod4[wt4] == 0: continue
                         if mu_prod[self.liealg.get_dual_weight(wt4)] == 0: continue
-                        ret_val += self._degree(wt1, wt2, wt3, wt4, self.level) * prod1[wt1] * prod2[wt2] * prod3[
-                            wt3] * prod4[wt4]
+                        ret_val += self._degree(wt1, wt2, wt3, wt4, self.level) * \
+                                   prod1[wt1] * prod2[wt2] * prod3[wt3] * prod4[wt4]
 
         return ret_val
 

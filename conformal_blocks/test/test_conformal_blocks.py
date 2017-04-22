@@ -9,7 +9,7 @@ import conformal_blocks.cbbundle as cbd
 class Test(unittest.TestCase):
 
 
-    def testConformalBlocksRanks(self):
+    def test_conformal_blocks_ranks(self):
         liealg = cbd.TypeALieAlgebra(3)
         wt1 = tuple([0, 1, 4])
         wt2 = tuple([1, 0, 2])
@@ -26,11 +26,12 @@ class Test(unittest.TestCase):
         cbb = cbd.ConformalBlocksBundle(liealg, [wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1,wt1], 2)
         #print(cbb.getRank())
 
-    def testSymmetricDivisors(self):
+    def test_symmetric_divisors(self):
         liealg = cbd.TypeALieAlgebra(1)
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 4, 1)
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
         self.assertEqual(1, cbb.get_norm_sym_divisor_ray()[0], "Divisor incorrect")
+
         
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 6, 1)
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
@@ -50,7 +51,7 @@ class Test(unittest.TestCase):
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
         ray = cbb.get_norm_sym_divisor_ray()
 
-    def testConformalBlocksDivisors(self):
+    def test_conformal_blocks_divisors(self):
         liealg = cbd.TypeALieAlgebra(1)
         cbb = cbd.ConformalBlocksBundle(liealg, [[1], [1], [1], [1]], 1)
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
@@ -107,7 +108,7 @@ class Test(unittest.TestCase):
         self.assertEqual(8, ray[0], "Divisor incorrect")
         self.assertEqual(9, ray[1], "Divisor incorrect")
 
-    def testFCurve(self):
+    def test_F_curve(self):
         liealg = cbd.TypeALieAlgebra(4)
         wt = tuple([0, 1, 0, 0])
         wt2 = tuple([0, 0, 1, 0])

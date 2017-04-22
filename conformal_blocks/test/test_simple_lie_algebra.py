@@ -8,45 +8,131 @@ import unittest
 import conformal_blocks.cbbundle as cbd
 
 class Test(unittest.TestCase):
-    
-    def testSL2OrbitIter(self):
+
+    def test_sl2_char(self):
+
         liealg = cbd.TypeALieAlgebra(1)
         wt = tuple([0])
-        orbit_wt = wt
-        orbit_dict = {orbit_wt}
-        for wt2 in liealg.get_orbit_iter(wt):
-            self.assertTrue(wt2 in orbit_dict, "Orbit incorrect")
-            
-        wt = tuple([-1])
-        orbit_wt1 = tuple([-1])
-        orbit_wt2 = tuple([1])
-        orbit_dict = {orbit_wt1, orbit_wt2}
-        for wt2 in liealg.get_orbit_iter(wt):
-            self.assertTrue(wt2 in orbit_dict, "Orbit incorrect")
+        self.assertEqual(1, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
 
+        wt = tuple([1])
+        self.assertEqual(2, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([1])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+
+        wt = tuple([2])
+        self.assertEqual(3, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([2])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+        char_wt = tuple([0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+
+    def test_sl3_char(self):
+        liealg = cbd.TypeALieAlgebra(2)
+        wt = (0, 0)
+        self.assertEqual(1, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([0, 0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+
+        wt = (1, 0)
+        self.assertEqual(3, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([1, 0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+
+        wt = (0, 1)
+        self.assertEqual(3, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([1, 0])
+        self.assertFalse(char_wt in dom_char, "Character incorrect")
+        char_wt = tuple([0, 1])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+
+        wt = (1, 1)
+        self.assertEqual(8, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([1, 1])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+        char_wt = tuple([0, 0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(2, dom_char[char_wt], "Character incorrect")
+
+        wt = (2, 1)
+        self.assertEqual(15, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([2, 1])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+        char_wt = tuple([1, 0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(2, dom_char[char_wt], "Character incorrect")
+        char_wt = tuple([0, 2])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+
+    def test_sl4_char(self):
         liealg = cbd.TypeALieAlgebra(3)
-        wt = (1, 0, 2)
-        A = set()
-        for wt2 in liealg.get_orbit_iter(wt):
-            ep_coords = liealg._convert_funds_to_epsilons(wt2)
-            norm_coords = [i - min(ep_coords) for i in ep_coords]
-            A.add(tuple(norm_coords))
+        wt = tuple([0, 0, 0])
+        self.assertEqual(1, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([0, 0, 0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
 
-        self.assertTrue((3, 2, 2, 0) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((3, 2, 0, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((3, 0, 2, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((2, 3, 2, 0) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((2, 3, 0, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((2, 2, 3, 0) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((2, 2, 0, 3) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((2, 0, 3, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((2, 0, 2, 3) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((0, 3, 2, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((0, 2, 3, 2) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
-        self.assertTrue((0, 2, 2, 3) in A, "Orbit incorrect: (3,2,2,0) not in orbit of (3,2,2,0)")
+        wt = tuple([1, 0, 0])
+        self.assertEqual(4, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([1, 0, 0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
 
-    
-    def testSL2Tensor(self):
+        wt = tuple([0, 0, 1])
+        self.assertEqual(4, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([1, 0, 0])
+        self.assertFalse(char_wt in dom_char, "Character incorrect")
+        char_wt = tuple([0, 0, 1])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+
+        wt = tuple([0, 1, 0])
+        self.assertEqual(6, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([0, 1, 0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+
+        wt = tuple([1, 1, 1])
+        self.assertEqual(64, liealg.get_rep_dim(wt), "Dimension not correct")
+        dom_char = liealg.get_dominant_character(wt)
+        char_wt = tuple([1, 1, 1])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(1, dom_char[char_wt], "Character incorrect")
+        char_wt = tuple([2, 0, 0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(2, dom_char[char_wt], "Character incorrect")
+        char_wt = tuple([0, 1, 0])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(4, dom_char[char_wt], "Character incorrect")
+        char_wt = tuple([0, 0, 2])
+        self.assertTrue(char_wt in dom_char, "Character incorrect")
+        self.assertEqual(2, dom_char[char_wt], "Character incorrect")
+
+    def test_sl2_tensor(self):
         liealg = cbd.TypeALieAlgebra(1)
         decomp = liealg.tensor((0,), (0,))
         dec_wt = tuple([0])
@@ -85,7 +171,7 @@ class Test(unittest.TestCase):
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-    def testSL2Fusion(self):
+    def test_sl2_fusion(self):
         liealg = cbd.TypeALieAlgebra(1)
         decomp = liealg.fusion((0,), (0,),1)
         dec_wt = tuple([0])
@@ -142,7 +228,7 @@ class Test(unittest.TestCase):
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-    def testSL2MultiFusion(self):
+    def test_sl2_multi_fusion(self):
         liealg = cbd.TypeALieAlgebra(1)
         wt1 = tuple([0])
         wt2 = tuple([1])
@@ -171,7 +257,7 @@ class Test(unittest.TestCase):
         self.assertTrue(dec_wt in decomp, "Tensor decomp incorrect")
         self.assertEqual(1, decomp[dec_wt], "Tensor decomp incorrect")
 
-    def testDegree(self):
+    def test_degree(self):
         liealg = cbd.TypeALieAlgebra(1)
         wt1 = tuple([1])
         wt2 = tuple([3])
