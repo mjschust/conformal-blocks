@@ -28,13 +28,20 @@ def experiment():
     num_points = 9
     goal = [1, 1, 2]
 
-    liealg = cbd.TypeALieAlgebra(rank, store_fusion=True)
+    liealg = cbd.TypeCLieAlgebra(rank, store_fusion=True)
     print("Weight", "Rank", "Divisor", "Cosine")
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, num_points, level)
-        if cbb.get_rank() == 0: continue
+        if cbb.get_rank() == 0:
+            continue
         divisor = cbb.get_norm_sym_divisor_ray()
-        print(wt, cbb.get_rank(), divisor, vec_cos(divisor, goal))
+        if divisor[0] == 0 and divisor[1] == 0 and divisor[1] == 0:
+            continue
+
+        cos = vec_cos(divisor, goal)
+        print(wt, cbb.get_rank(), divisor, cos, math.acos(cos) * 180 / math.pi)
+        #print([long(cbb.intersect_F_curve(f_curve)) for f_curve in cbb.get_sym_F_curves()])
+        print("")
 
 if __name__ == '__main__':
     t0 = time.clock()

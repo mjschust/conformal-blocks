@@ -7,16 +7,16 @@ def experiment():
     Generates Macaulay 2 test cases, runs them using Swinarski's program, then outputs new unit tests if successful
     :return: Null
     """
-    rank = 3
+    rank = 2
     level = 2
-    num_points = 5
+    num_points = 6
     tries = 10
 
-    liealg = cbd.TypeALieAlgebra(rank)
+    liealg = cbd.TypeCLieAlgebra(rank)
     A_l = liealg.get_weights(level)
     m2file = open("TestFCurve.m2", "w")
     m2file.write("loadPackage(\"ConformalBlocks\");\n")
-    m2file.write("sl_" + str(rank+1) + " = simpleLieAlgebra(\"A\", " + str(rank) + ");\n")
+    m2file.write("sl_" + str(rank+1) + " = simpleLieAlgebra(\"C\", " + str(rank) + ");\n")
     test_cases = []
     for i in range(tries):
         weights = [random.choice(A_l) for i in range(num_points)]
@@ -50,7 +50,7 @@ def experiment():
 
     test_out = subprocess.check_output(["M2", "--script", "TestFCurve.m2"])
     if test_out == "OK\n":
-        print("liealg = cbd.TypeALieAlgebra(" + str(rank) + ")")
+        print("liealg = cbd.TypeCLieAlgebra(" + str(rank) + ")")
         for case in test_cases:
             weights = case[0]
             f_curve = case[1]

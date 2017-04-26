@@ -1,11 +1,7 @@
 from __future__ import division
-import math, fractions, itertools
-from lie import SimpleLieAlgebra, TypeALieAlgebra, TypeBLieAlgebra, TypeCLieAlgebra, _Root
-#Try to use gmpy2 for exact arithmetic if installed
-try:
-    from gmpy2 import mpq as Fraction
-except ImportError:
-    from fractions import Fraction
+import math, fractions, itertools, functools
+from conformal_blocks.lie import SimpleLieAlgebra, TypeALieAlgebra, TypeBLieAlgebra, TypeCLieAlgebra, _Root
+from fractions import Fraction
 '''
 Created on Nov 10, 2016
 
@@ -187,9 +183,9 @@ class ConformalBlocksBundle(object):
         divisor = self.get_symmetrized_divisor()
 
         if self.liealg.exact:
-            denom_lcm = reduce(lambda x, y: self._lcm(x, y), [long(q.denominator) for q in divisor])
+            denom_lcm = functools.reduce(lambda x, y: self._lcm(x, y), [long(q.denominator) for q in divisor])
             denom_clear = [long(round(q * denom_lcm)) for q in divisor]
-            div_gcd = reduce(lambda x, y: fractions.gcd(x, y), denom_clear)
+            div_gcd = functools.reduce(lambda x, y: fractions.gcd(x, y), denom_clear)
             if div_gcd > 0:
                 return [x//div_gcd for x in denom_clear]
             else:
@@ -197,7 +193,7 @@ class ConformalBlocksBundle(object):
         else:
             n_fact = math.factorial(len(self.weights))
             int_div = [long(round(n_fact * x)) for x in divisor]
-            div_gcd = reduce(lambda x, y: fractions.gcd(x, y), int_div)
+            div_gcd = functools.reduce(lambda x, y: fractions.gcd(x, y), int_div)
             if div_gcd > 0:
                 return [x // div_gcd for x in int_div]
             else:
@@ -346,7 +342,7 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
             else:
                 coord = i * (n - i) * self.get_rank() * self.liealg.casimirScalar(wt) / (n - 1)
             sum_list = [0]
-            self._weightedFactor(wt, wt, 1, i - 1, n - i, sum_list, {})
+            self._weighted_factor(wt, wt, 1, i - 1, n - i, sum_list, {})
 
             if self.liealg.exact:
                 coord = Fraction(coord - sum_list[0], 2 * (self.level + self.liealg.dual_coxeter()))
@@ -356,12 +352,12 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
 
         return ret_val
 
-    def _weightedFactor(self, wt, wt2, mult, wts_rem, ic, ret_val, rank_dict):
+    def _weighted_factor(self, wt, wt2, mult, wts_rem, ic, ret_val, rank_dict):
         prod = self.liealg.fusion(wt, wt2, self.level)
 
         for wt3 in prod.keys():
             if wts_rem > 1:
-                self._weightedFactor(wt, wt3, mult * prod[wt3], wts_rem - 1, ic, ret_val, rank_dict)
+                self._weighted_factor(wt, wt3, mult * prod[wt3], wts_rem - 1, ic, ret_val, rank_dict)
             else:
                 if not wt3 in rank_dict:
                     wt_list = [wt for i in range(ic)]
@@ -371,3 +367,31 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
 
                 ret_val[0] += self.liealg.casimirScalar(self.liealg.get_dual_weight(wt3)) * mult * prod[wt3] * \
                               rank_dict[wt3]
+
+    def get_sym_F_curves(self):
+        """
+        Generates a list of all F-curves with the same number of points as the conformal
+        blocks bundle, up to permutation of points.
+
+        :return: A list of partitions of [1, 2,..., n]: the list of F-curves
+        """
+        n = len(self.weights)
+        partitions = []
+
+        for part1 in range(int(math.ceil(n / 4)), n - 2):
+            for part2 in range(int(math.ceil((n - part1) / 3)), min(n - part1 - 2, part1) + 1):
+                for part3 in range(int(math.ceil((n - part1 - part2) / 2)), min(n - part1 - part2 - 1, part2) + 1):
+                    part4 = n - part1 - part2 - part3
+                    partitions.append((part1, part2, part3, part4))
+
+        ret_list = []
+        for partition in partitions:
+            p1, p2, p3, p4 = partition[0], partition[1], partition[2], partition[3]
+            f_curve = [tuple([x for x in range(1, p1 + 1)]), tuple([x for x in range(p1 + 1, p1 + p2 + 1)]),
+                       tuple([x for x in range(p1 + p2 + 1, p1 + p2 + p3 + 1)]),
+                       tuple([x for x in range(p1 + p2 + p3 + 1, n + 1)])]
+            ret_list.append(f_curve)
+
+
+
+        return ret_list

@@ -2,10 +2,7 @@ from __future__ import division
 from collections import defaultdict
 import math, fractions, itertools
 #Try to use gmpy2 for exact arithmetic if installed
-try:
-    from gmpy2 import mpq as Fraction
-except ImportError:
-    from fractions import Fraction
+from fractions import Fraction
 '''
 Created on Nov 10, 2016
 
@@ -462,15 +459,16 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         ep_coords1 = self._convert_funds_to_epsilons(wt1)
         ep_coords2 = self._convert_funds_to_epsilons(wt2)
 
+        sum1 = sum2 = 0
         for i in range(self.rank + 1):
-            ret_val = ret_val + ep_coords1[i] * ep_coords2[i]
-
-        n = sum(ep_coords1) * sum(ep_coords2)
+            ret_val += ep_coords1[i] * ep_coords2[i]
+            sum1 += ep_coords1[i]
+            sum2 += ep_coords2[i]
 
         if self.exact:
-            ret_val -= Fraction(n, self.rank + 1)
+            ret_val -= Fraction(sum1 * sum2, self.rank + 1)
         else:
-            ret_val -= n / (self.rank + 1)
+            ret_val -= sum1 * sum2 / (self.rank + 1)
 
         return ret_val
 
@@ -519,7 +517,7 @@ class TypeALieAlgebra(SimpleLieAlgebra):
         else:
             r_minus_one_list = self._get_weights(level, rank - 1)
             for coord in r_minus_one_list:
-                for i in range(level - reduce(lambda x, y: x + y, coord) + 1):
+                for i in range(level - sum(coord) + 1):
                     ret_list.append(coord + [i])
 
         return ret_list
@@ -1072,7 +1070,7 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
         else:
             r_minus_one_list = self._get_weights(level, rank - 1)
             for coord in r_minus_one_list:
-                for i in range(level - reduce(lambda x, y: x + y, coord) + 1):
+                for i in range(level - sum(coord) + 1):
                     ret_list.append(coord + [i])
 
         return ret_list

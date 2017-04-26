@@ -31,14 +31,12 @@ class Test(unittest.TestCase):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 4, 1)
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
         self.assertEqual(1, cbb.get_norm_sym_divisor_ray()[0], "Divisor incorrect")
-
         
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 6, 1)
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
         ray = cbb.get_norm_sym_divisor_ray()
         self.assertEqual(2, ray[0], "Divisor incorrect")
         self.assertEqual(1, ray[1], "Divisor incorrect")
-
         
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 8, 1)
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
@@ -46,7 +44,7 @@ class Test(unittest.TestCase):
         self.assertEqual(3, ray[0], "Divisor incorrect")
         self.assertEqual(2, ray[1], "Divisor incorrect")
         self.assertEqual(4, ray[2], "Divisor incorrect")
-        
+
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, [1], 10, 1)
         self.assertEqual(1, cbb.get_rank(), "Rank incorrect")
         ray = cbb.get_norm_sym_divisor_ray()
