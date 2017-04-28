@@ -32,7 +32,7 @@ of its highest weight.
 
 sage: import conformal_blocks.cbbundle as cbbundle
 sage: liealg = cbbundle.TypeALieAlgebra(3)
-sage: liealg.tensor([1,2,0],[3,1,1])
+sage: liealg.tensor((1,2,0),(3,1,1))
 {[0, 2, 3]: 1,
  [0, 3, 1]: 1,
  [1, 0, 4]: 1,
@@ -55,7 +55,7 @@ sage: liealg.tensor([1,2,0],[3,1,1])
  [5, 1, 2]: 1,
  [5, 2, 0]: 1,
  [6, 0, 1]: 1}
-sage: liealg.fusion([1,2,0],[3,1,1],5)
+sage: liealg.fusion((1,2,0),(3,1,1),5)
 {[0, 2, 3]: 1,
  [0, 3, 1]: 1,
  [1, 0, 4]: 1,
@@ -75,8 +75,8 @@ SymmetricConformalBlocksBundle(<Lie Algebra>, <Weight>, <Number of points>, <Lev
 
 For example:
 
-sage: V = cbbundle.SymmetricConformalBlocksBundle(liealg, [1,2,1], 9, 4)
-sage: V.getRank()
+sage: V = cbbundle.SymmetricConformalBlocksBundle(liealg, (1,2,1), 9, 4)
+sage: V.get_rank()
 41412
 sage: V.get_norm_sym_divisor_ray()
 [151081L, 189833L, 229020L]
