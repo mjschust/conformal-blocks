@@ -1,8 +1,15 @@
 from __future__ import division
 from collections import defaultdict
 import math, fractions, itertools
-#Try to use gmpy2 for exact arithmetic if installed
-from fractions import Fraction
+try:
+    import sage.all as sage
+    def Fraction(x,y):
+        try:
+            return sage.Rational((x, y))
+        except TypeError:
+            return x/y
+except ImportError:
+    from fractions import Fraction
 '''
 Created on Nov 10, 2016
 
@@ -58,7 +65,7 @@ class SimpleLieAlgebra(object):
         if self.exact:
             self._rep_dim_dict[high_weight] = Fraction(numer, denom)
         else:
-            self._rep_dim_dict[high_weight] = long(round(numer / denom))
+            self._rep_dim_dict[high_weight] = round(numer / denom)
         return self._rep_dim_dict[high_weight]
 
     def get_dominant_character(self, high_weight):

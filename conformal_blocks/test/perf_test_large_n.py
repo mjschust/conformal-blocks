@@ -32,7 +32,7 @@ def experiment():
     level = 4
     num_points = 10
 
-    liealg = cbd.TypeALieAlgebra(rank, store_fusion=True, exact=False)
+    liealg = cbd.TypeALieAlgebra(rank, store_fusion=True, exact=True)
     print("Weight", "Rank", "Divisor")
     for wt in liealg.get_weights(level):
         cbb = cbd.SymmetricConformalBlocksBundle(liealg, wt, num_points, level)

@@ -1,7 +1,15 @@
 from __future__ import division
 import math, fractions, itertools, functools
 from conformal_blocks.lie import SimpleLieAlgebra, TypeALieAlgebra, TypeBLieAlgebra, TypeCLieAlgebra, _Root
-from fractions import Fraction
+try:
+    import sage.all as sage
+    def Fraction(x,y):
+        try:
+            return sage.Rational((x, y))
+        except TypeError:
+            return x/y
+except ImportError:
+    from fractions import Fraction
 '''
 Created on Nov 10, 2016
 
@@ -80,7 +88,7 @@ class ConformalBlocksBundle(object):
             if mu in multi_fus_prod:
                 ret_val += mult * multi_fus_prod[mu]
 
-        return long(round(ret_val))
+        return ret_val
 
     #Original version of the above method.  Uses less memory but runs an order of magnitude slower.
     def _alt_compute_rank(self, weights, level):
@@ -175,7 +183,9 @@ class ConformalBlocksBundle(object):
     def get_norm_sym_divisor_ray(self):
         """
         Computes the symmetrized divisor associated to the conformal blocks bundle and normalizes the
-        vector by clearing denominators.  **DOES NOT WORK WELL WITH FP ARITHMETIC**
+        vector by clearing denominators.  
+        **DOES NOT WORK WELL WITH FP ARITHMETIC**
+        **DOES NOT WORK IN SAGE**
 
         :return: A list of numbers: the divisor ray given in the standard basis D_1, D_2,... of
             the symmetric nef cone.
@@ -277,8 +287,7 @@ class ConformalBlocksBundle(object):
         :return: A positive integer: the degree of the bundle.
         """
         liealg = self.liealg
-        cbb = ConformalBlocksBundle(liealg, [wt1, wt2, wt3, wt4], level)
-        ret_val = cbb.get_rank() * (
+        ret_val = self._get_rank([wt1, wt2, wt3, wt4], level) * (
             liealg.casimirScalar(wt1) + liealg.casimirScalar(wt2) + liealg.casimirScalar(wt3) + liealg.casimirScalar(wt4))
 
         sum = 0
@@ -305,7 +314,7 @@ class ConformalBlocksBundle(object):
         if liealg.exact:
             ret_val = Fraction(ret_val, (2 * (level + liealg.dual_coxeter())))
         else:
-            ret_val = long(round(ret_val / (2 * (level + liealg.dual_coxeter()))))
+            ret_val = round(ret_val / (2 * (level + liealg.dual_coxeter())))
 
         return ret_val
 
@@ -362,8 +371,7 @@ class SymmetricConformalBlocksBundle(ConformalBlocksBundle):
                 if not wt3 in rank_dict:
                     wt_list = [wt for i in range(ic)]
                     wt_list.append(wt3)
-                    cbb = ConformalBlocksBundle(self.liealg, wt_list, self.level)
-                    rank_dict[wt3] = cbb.get_rank()
+                    rank_dict[wt3] = self._get_rank(wt_list, self.level)
 
                 ret_val[0] += self.liealg.casimirScalar(self.liealg.get_dual_weight(wt3)) * mult * prod[wt3] * \
                               rank_dict[wt3]
