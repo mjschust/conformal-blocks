@@ -38,6 +38,32 @@ class MyTestCase(unittest.TestCase):
             roots.remove(tuple(rt.root_coords))
         self.assertTrue(len(roots) == 0)
 
+        wts = [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)]
+        for wt in liealg.get_weights(1):
+            self.assertTrue(wt in wts)
+            wts.remove(wt)
+        self.assertTrue(len(roots) == 0)
+
+        wts = [(0,0,0), (1,0,0), (2,0,0), (0,1,0), (1,1,0), (0,0,1), (1,0,1), (0,1,1), (0,2,0), (0,0,2)]
+        for wt in liealg.get_weights(2):
+            self.assertTrue(wt in wts)
+            wts.remove(wt)
+        self.assertTrue(len(roots) == 0)
+
+        self.assertEqual((0, 0, 0), liealg.reflect_to_chamber((0, 0, 0)))
+        self.assertEqual((1, 0, 1), liealg.reflect_to_chamber((1, 0, 1)))
+        self.assertEqual((0, 1, 0), liealg.reflect_to_chamber((-1, 0, 1)))
+        self.assertEqual((0, 1, 1), liealg.reflect_to_chamber((1, 0, -2)))
+        self.assertEqual((1, 1, 0), liealg.reflect_to_chamber((1, -1, -2)))
+
+        self.assertEqual(((0, 0, 0), 1), liealg.reflect_to_chamber_with_parity((0, 0, 0)))
+        self.assertEqual(((1, 0, 1), 1), liealg.reflect_to_chamber_with_parity((1, 0, 1)))
+        self.assertEqual((0, 1, 0), liealg.reflect_to_chamber((-1, 0, 1)))
+        print(liealg._convert_funds_to_epsilons((-1,0,1)))
+        self.assertEqual((0, 1, 1), liealg.reflect_to_chamber((1, 0, -2)))
+        self.assertEqual((1, 1, 0), liealg.reflect_to_chamber((1, -1, -2)))
+
+
         liealg = cbd.TypeDLieAlgebra(4, exact=False)
         self.assertEqual([1, 0, 0, 0], liealg._convert_funds_to_epsilons((1, 0, 0, 0)))
         self.assertEqual([1, 1, 0, 0], liealg._convert_funds_to_epsilons((0, 1, 0, 0)))
@@ -77,6 +103,26 @@ class MyTestCase(unittest.TestCase):
             self.assertTrue(tuple(rt.root_coords) in roots)
             roots.remove(tuple(rt.root_coords))
         self.assertTrue(len(roots) == 0)
+
+        wts = [(0, 0, 0, 0), (1, 0, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)]
+        for wt in liealg.get_weights(1):
+            self.assertTrue(wt in wts)
+            wts.remove(wt)
+        self.assertTrue(len(roots) == 0)
+
+        wts = [(0, 0, 0, 0), (0, 1, 0, 0), (1, 0, 0, 0), (2, 0, 0, 0), (0, 0, 1, 0), (1, 0, 1, 0),
+               (0, 0, 0, 1), (1, 0, 0, 1), (0, 0, 1, 1), (0, 0, 2, 0), (0, 0, 0, 2)]
+        for wt in liealg.get_weights(2):
+            self.assertTrue(wt in wts)
+            wts.remove(wt)
+        self.assertTrue(len(roots) == 0)
+
+        self.assertEqual((0, 0, 0, 0), liealg.reflect_to_chamber((0, 0, 0, 0)))
+        self.assertEqual((1, 0, 1, 0), liealg.reflect_to_chamber((1, 0, 1, 0)))
+        self.assertEqual((0, 0, 0, 1), liealg.reflect_to_chamber((-1, 0, 1, 0)))
+        self.assertEqual((0, 0, 1, 1), liealg.reflect_to_chamber((1, 0, -2, 0)))
+        self.assertEqual((0, 1, 1, 0), liealg.reflect_to_chamber((1, -1, -2, 1)))
+
 
 
 if __name__ == '__main__':

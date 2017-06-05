@@ -1402,7 +1402,11 @@ class TypeDLieAlgebra(SimpleLieAlgebra):
         :param level: A positive integer.
         :return: A list of weights with level less than level.
         """
-        return [tuple(coords) for coords in self._get_weights(level, self.rank)]
+        ret_list = []
+        for i in range(level + 1):
+            for j in range(level - i + 1):
+                ret_list.extend([tuple(coords + [i, j]) for coords in self._get_weights(level - i - j, self.rank - 2)])
+        return ret_list
 
     def _get_weights(self, level, rank):
         ret_list = []
@@ -1412,19 +1416,27 @@ class TypeDLieAlgebra(SimpleLieAlgebra):
         else:
             r_minus_one_list = self._get_weights(level, rank - 1)
             for coord in r_minus_one_list:
-                for i in range(level - sum(coord) + 1):
+                for i in range((level - coord[0] - 2*sum(coord[1:])) // 2 + 1):
                     ret_list.append(coord + [i])
 
         return ret_list
 
     def reflect_to_chamber(self, wt):
-        #First reflect by making epsilon coords positive
+        #First reflect by making epsilon coords positive, keeping track of cum sign
         ret_coords = self._convert_funds_to_epsilons(wt)
 
+        sign = 1
+        for i in range(len(ret_coords)):
+            if ret_coords[i] < 0:
+                sign *= -1
+            ret_coords[i] = abs(ret_coords[i])
         ret_coords = [abs(x) for x in ret_coords]
 
-        #Sort to finish reflection into chamber
+        #Sort coords
         ret_coords = self._insertsort(ret_coords)
+
+        #Multiply smallest coord by cum sign
+        ret_coords[-1] *= sign
 
         #Return weight in terms of fundamental weights
         return self._convert_epsilons_to_funds(ret_coords)
@@ -1441,17 +1453,37 @@ class TypeDLieAlgebra(SimpleLieAlgebra):
         return ret_list
 
     def reflect_to_chamber_with_parity(self, wt):
-        #First reflect by making epsilon coords positive
+        #Parity is calculated incorrectly, see below
+        raise NotImplementedError
+        #First 'reflect' by making epsilon coords positive, keeping track of number
+        #of negative signs
         ret_coords = self._convert_funds_to_epsilons(wt)
-        parity = 1
+        num_neg = 0
         for i in range(len(ret_coords)):
             if ret_coords[i] < 0:
                 ret_coords[i] = -ret_coords[i]
-                parity *= -1
+                num_neg += 1
 
-        #Then sort to finish reflection
+        #Assign parity and sign based on number of negatives
+        num_neg = num_neg % 4
+        if num_neg == 0:
+            parity = 1
+            sign = 1
+        elif num_neg == 1:
+            parity = 1
+            sign = -1
+        elif num_neg == 2:
+            parity = -1
+            sign = 1
+        else:
+            parity = -1
+            sign = -1
+
+        #Then sort and multiply last coord by above sign to finish reflection
         ret_coords, sort_parity = self._insertsort_parity(ret_coords)
         parity *= sort_parity
+        #TODO: this operation could potentially change the parity
+        ret_coords[-1] *= sign
 
         return self._convert_epsilons_to_funds(ret_coords), parity
 
