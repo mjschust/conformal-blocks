@@ -950,14 +950,15 @@ class TypeBLieAlgebra(SimpleLieAlgebra):
             return self
 
         def next(self):
-            ep_coords = list(self.cur_perm)
             try:
                 neg_inds = self._index_iter.next()
+                ep_coords = list(self.cur_perm)
             except StopIteration:
                 if self.perms_done:
                     raise StopIteration()
                 else:
-                    ep_coords = self.cur_perm = self._next_perm()
+                    self.cur_perm = self._next_perm()
+                    ep_coords = list(self.cur_perm)
                     non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
                     self._index_iter = itertools.chain.from_iterable(itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds)+1))
                     neg_inds = self._index_iter.next()
@@ -1252,14 +1253,15 @@ class TypeCLieAlgebra(SimpleLieAlgebra):
             return self
 
         def next(self):
-            ep_coords = list(self.cur_perm)
             try:
                 neg_inds = self._index_iter.next()
+                ep_coords = list(self.cur_perm)
             except StopIteration:
                 if self.perms_done:
                     raise StopIteration()
                 else:
-                    ep_coords = self.cur_perm = self._next_perm()
+                    self.cur_perm = self._next_perm()
+                    ep_coords = list(self.cur_perm)
                     non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
                     self._index_iter = itertools.chain.from_iterable(itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds)+1))
                     neg_inds = self._index_iter.next()
@@ -1430,7 +1432,6 @@ class TypeDLieAlgebra(SimpleLieAlgebra):
             if ret_coords[i] < 0:
                 sign *= -1
             ret_coords[i] = abs(ret_coords[i])
-        ret_coords = [abs(x) for x in ret_coords]
 
         #Sort coords
         ret_coords = self._insertsort(ret_coords)
@@ -1453,39 +1454,26 @@ class TypeDLieAlgebra(SimpleLieAlgebra):
         return ret_list
 
     def reflect_to_chamber_with_parity(self, wt):
-        #Parity is calculated incorrectly, see below
-        raise NotImplementedError
-        #First 'reflect' by making epsilon coords positive, keeping track of number
-        #of negative signs
         ret_coords = self._convert_funds_to_epsilons(wt)
-        num_neg = 0
+        ret_coords, parity = self._reflect_eps_coords_to_chamber_with_parity(ret_coords)
+
+        return self._convert_epsilons_to_funds(ret_coords), parity
+
+    def _reflect_eps_coords_to_chamber_with_parity(self, coords):
+        #First 'reflect' by making epsilon coords positive, keeping track of negative
+        #signs
+        ret_coords = list(coords)
+        sign = 1
         for i in range(len(ret_coords)):
             if ret_coords[i] < 0:
                 ret_coords[i] = -ret_coords[i]
-                num_neg += 1
-
-        #Assign parity and sign based on number of negatives
-        num_neg = num_neg % 4
-        if num_neg == 0:
-            parity = 1
-            sign = 1
-        elif num_neg == 1:
-            parity = 1
-            sign = -1
-        elif num_neg == 2:
-            parity = -1
-            sign = 1
-        else:
-            parity = -1
-            sign = -1
+                sign *= -1
 
         #Then sort and multiply last coord by above sign to finish reflection
-        ret_coords, sort_parity = self._insertsort_parity(ret_coords)
-        parity *= sort_parity
-        #TODO: this operation could potentially change the parity
+        ret_coords, parity = self._insertsort_parity(ret_coords)
         ret_coords[-1] *= sign
 
-        return self._convert_epsilons_to_funds(ret_coords), parity
+        return ret_coords, parity
 
     def _insertsort_parity(self, coords):
         ret_list = list(coords)
@@ -1501,23 +1489,17 @@ class TypeDLieAlgebra(SimpleLieAlgebra):
         return ret_list, parity
 
     def reflect_to_alcove_with_parity(self, wt, ell):
-        ret_coords, parity = self._insertsort_parity(self._convert_funds_to_epsilons(wt))
+        ret_coords = self._convert_funds_to_epsilons(wt)
+        ret_coords, parity = self._reflect_eps_coords_to_chamber_with_parity(ret_coords)
 
-        while (ret_coords[0] > ell):
+        while (ret_coords[0] + ret_coords[1] > ell):
             #wt := wt + (ell-level(wt))*theta
-            ret_coords[0] = 2*ell-ret_coords[0]
+            ret_coords[0], ret_coords[1] = ell - ret_coords[1], ell - ret_coords[0]
 
             #Return to chamber
-            fin_parity = -1
-            for i in range(len(ret_coords)):
-                if ret_coords[i] < 0:
-                    ret_coords[i] = -ret_coords[i]
-                    fin_parity *= -1
+            ret_coords, chamber_parity = self._reflect_eps_coords_to_chamber_with_parity(ret_coords)
 
-            ret_coords, sort_parity = self._insertsort_parity(ret_coords)
-            fin_parity *= sort_parity
-
-            parity *= fin_parity
+            parity *= -1 * chamber_parity
 
         return self._convert_epsilons_to_funds(ret_coords), parity
 
@@ -1583,6 +1565,17 @@ class TypeDLieAlgebra(SimpleLieAlgebra):
         def __init__(self, liealg, wt):
             ep_coords = liealg._convert_funds_to_epsilons(liealg.reflect_to_chamber(wt))
 
+            #Check last element to zero/nonzero cases, and store the sign if nonzero
+            if ep_coords[-1] < 0:
+                self._contains_zero = False
+                self._sign = -1
+                ep_coords[-1] *= -1
+            elif ep_coords[-1] == 0:
+                self._contains_zero = True
+            else:
+                self._contains_zero = False
+                self._sign = 1
+
             #Construct list of items and multiplicities
             self._item_list = [ep_coords[0]]
             cur_item = ep_coords[0]
@@ -1612,29 +1605,43 @@ class TypeDLieAlgebra(SimpleLieAlgebra):
             self.liealg = liealg
 
             # Get first permutation, and construct index iterator, which iterates over subsets of
-            # the indices of the non-zero elements of the permutation
+            # the indices of the non-zero elements of the permutation (except the last element in
+            # the case that all elements are nonzero)
             self.cur_perm = self._next_perm()
-            non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
-            self._index_iter = itertools.chain.from_iterable(itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds) + 1))
+            if not self._contains_zero:
+                non_zero_inds = [i for i in range(len(self.cur_perm) - 1) if self.cur_perm[i] != 0]
+            else:
+                non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
+            self._index_iter = itertools.chain.from_iterable(
+                itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds) + 1))
 
         def __iter__(self):
             return self
 
         def next(self):
-            ep_coords = list(self.cur_perm)
             try:
                 neg_inds = self._index_iter.next()
+                ep_coords = list(self.cur_perm)
             except StopIteration:
                 if self.perms_done:
                     raise StopIteration()
                 else:
-                    ep_coords = self.cur_perm = self._next_perm()
-                    non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
-                    self._index_iter = itertools.chain.from_iterable(itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds)+1))
+                    self.cur_perm = self._next_perm()
+                    ep_coords = list(self.cur_perm)
+                    if not self._contains_zero:
+                        non_zero_inds = [i for i in range(len(self.cur_perm) - 1) if self.cur_perm[i] != 0]
+                    else:
+                        non_zero_inds = [i for i in range(len(self.cur_perm)) if self.cur_perm[i] != 0]
+                    self._index_iter = itertools.chain.from_iterable(
+                        itertools.combinations(non_zero_inds, r) for r in range(len(non_zero_inds) + 1))
                     neg_inds = self._index_iter.next()
 
+            # Set signs of permutation; last element is negated if there are no zero elements and
+            # the number of other negatives is odd
             for i in neg_inds:
                 ep_coords[i] = -ep_coords[i]
+            if not self._contains_zero:
+                ep_coords[-1] *= self._sign * (-1)**len(neg_inds)
 
             return self.liealg._convert_epsilons_to_funds(ep_coords)
 
